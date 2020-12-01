@@ -1,0 +1,494 @@
+<html>
+
+<head lang="en">
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+	<link rel="stylesheet" href="css/bootstrap.min.css" />
+	<title>Positions</title>
+</head>
+
+<body>
+	<div class="container-fluid">
+		<!-- SESSION -->
+		<div class="row">
+			<div class="col-xl-8">
+				<h4>Trading sessions</h4>
+				<div class="row mt-3">
+					<div class="col-xl-3">
+						<label>Trade session</label>
+						<select v-model="group" class="form-control">
+							<option value="null" disabled>Choose...</option>
+							<option v-for="group in groups">{{ group }}</option>
+						</select>
+					</div>
+
+					<div class="col-xl-3">
+						<label>New trading session</label>
+						<input v-model="groupName" class="form-control" placeholder="E.g. Backtesting 2020/11/28" />
+					</div>
+
+					<div class="col-xl-6" style="margin-top: 32px;">
+						<button v-on:click="addGroup" type="button" class="btn btn-outline-success">Add trade session</button>
+						<button v-if="group != null" v-on:click="deleteGroup(group)" type="button" class="btn btn-outline-danger">Remove current session</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- /SESSION -->
+
+		<!-- STATISTICS -->
+		<div v-show="group != null" class="row" style="margin-top: 50px">
+			<div class="col-xl-12">
+				<div class="row mb-3">
+					<div class="col-xl-12">
+						<h4 class="d-inline-block">Statistics for session</h4>
+						<button v-on:click="showStats = !showStats" type="button" class="btn btn-sm btn-outline-primary d-inline-block ml-3">
+							<span v-if="!showStats">+</span>
+							<span v-if="showStats">-</span>
+						</button>
+					</div>
+					<div class="col-xl-12">
+						{{ list.length }} trades &raquo; {{ percent(win, list.length) }}% win/be &raquo; {{ r }}R
+					</div>
+				</div>
+
+				<template v-if="showStats">
+					<div class="row">
+						<div class="col-xl-4">
+							<table class="table table-striped">
+								<thead>
+									<th>Pair</th>
+									<th>Total</th>
+									<th>Wins</th>
+									<th>B/E</th>
+									<th>Losses</th>
+								</thead>
+								<tbody>
+									<tr v-for="pair in bestPairs">
+										<td>{{ pair.name }}</td>
+										<td>{{ pair.total }}</td>
+										<td>{{ percent(pair.win, pair.total) }}% ({{ pair.win }})</td>
+										<td>{{ percent(pair.be, pair.total) }}% ({{ pair.be }})</td>
+										<td>{{ percent(pair.loss, pair.total) }}% ({{ pair.loss }})</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+
+						<div class="col-xl-4">
+							<table class="table table-striped">
+								<thead>
+									<th>Setup</th>
+									<th>Total</th>
+									<th>Wins</th>
+									<th>B/E</th>
+									<th>Losses</th>
+								</thead>
+								<tbody>
+									<tr v-for="setup in bestSetups">
+										<td>{{ setup.name }}</td>
+										<td>{{ setup.total }}</td>
+										<td>{{ percent(setup.win, setup.total) }}% ({{ setup.win }})</td>
+										<td>{{ percent(setup.be, setup.total) }}% ({{ setup.be }})</td>
+										<td>{{ percent(setup.loss, setup.total) }}% ({{ setup.loss }})</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+
+						<div class="col-xl-4">
+							<table class="table table-striped">
+								<thead>
+									<th>Direction</th>
+									<th>Total</th>
+									<th>Wins</th>
+									<th>B/E</th>
+									<th>Losses</th>
+								</thead>
+								<tbody>
+									<tr v-for="direction in bestDirections">
+										<td>{{ direction.name }}</td>
+										<td>{{ direction.total }}</td>
+										<td>{{ percent(direction.win, direction.total) }}% ({{ direction.win }})</td>
+										<td>{{ percent(direction.be, direction.total) }}% ({{ direction.be }})</td>
+										<td>{{ percent(direction.loss, direction.total) }}% ({{ direction.loss }})</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+					<div class="row mt-3">
+						<div class="col-xl-4">
+							<table class="table table-striped">
+								<thead>
+									<th>Type</th>
+									<th>Total</th>
+									<th>Wins</th>
+									<th>B/E</th>
+									<th>Losses</th>
+								</thead>
+								<tbody>
+									<tr v-for="type in bestTypes">
+										<td>{{ type.name }}</td>
+										<td>{{ type.total }}</td>
+										<td>{{ percent(type.win, type.total) }}% ({{ type.win }})</td>
+										<td>{{ percent(type.be, type.total) }}% ({{ type.be }})</td>
+										<td>{{ percent(type.loss, type.total) }}% ({{ type.loss }})</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+
+						<div class="col-xl-4">
+							<table class="table table-striped">
+								<thead>
+									<th>Hour</th>
+									<th>Total</th>
+									<th>Wins</th>
+									<th>B/E</th>
+									<th>Losses</th>
+								</thead>
+								<tbody>
+									<tr v-for="hour in bestHours">
+										<td>{{ hour.name }}</td>
+										<td>{{ hour.total }}</td>
+										<td>{{ percent(hour.win, hour.total) }}% ({{ hour.win }})</td>
+										<td>{{ percent(hour.be, hour.total) }}% ({{ hour.be }})</td>
+										<td>{{ percent(hour.loss, hour.total) }}% ({{ hour.loss }})</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+
+						<div class="col-xl-4">
+							<table class="table table-striped">
+								<thead>
+									<th>Day</th>
+									<th>Total</th>
+									<th>Wins</th>
+									<th>B/E</th>
+									<th>Losses</th>
+								</thead>
+								<tbody>
+									<tr v-for="day in bestDay">
+										<td>{{ day.name }}</td>
+										<td>{{ day.total }}</td>
+										<td>{{ percent(day.win, day.total) }}% ({{ day.win }})</td>
+										<td>{{ percent(day.be, day.total) }}% ({{ day.be }})</td>
+										<td>{{ percent(day.loss, day.total) }}% ({{ day.loss }})</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+					<div class="row mt-3">
+						<div class="col-xl-4">
+							<div class="row">
+								<div class="col-xl-12">
+									<table class="table table-striped">
+										<thead>
+											<th>Statistic</th>
+											<th>Value</th>
+										</thead>
+										<tbody>
+											<tr v-for="stat in generalStats">
+												<td>{{ stat.name }}</td>
+												<td>{{ stat.value }}</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
+
+							<div class="row">
+								<div class="col-xl-4">
+									<label>Monetary value</label>
+									<div class="input-group mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">$</span>
+										</div>
+										<input v-model="money" type="number" class="form-control" placeholder="Monetary value">
+									</div>
+								</div>
+
+								<div class="col-xl-4">
+									<label>Risk per trade</label>
+									<div class="input-group mb-3">
+										<input v-model="risk" type="number" class="form-control" placeholder="Risk">
+										<div class="input-group-append">
+											<span class="input-group-text">%</span>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</template>
+			</div>
+		</div>
+		<!-- /STATISTICS -->
+
+		<!-- TRADES -->
+		<template v-if="group != null">
+			<h3 style="margin-top: 50px;">Trades</h3>
+			<div class="row">
+				<div class="col-xl-2">
+					<div class="form-group">
+						<label>Date</label>
+						<input v-model="date" type="datetime-local" class="form-control" />
+					</div>
+					<div class="form-group">
+						<label>Direction</label>
+						<select v-model="direction" class="form-control">
+							<option value="null" disabled>Choose...</option>
+							<option v-for="direction in directions">{{ direction }}</option>
+						</select>
+					</div>
+				</div>
+				
+				<div class="col-xl-2">
+					<div class="form-group">
+						<label>Pair</label>
+						<select v-model="pair" class="form-control">
+							<option value="null" disabled>Choose...</option>
+							<option v-for="pair in pairs">{{ pair }}</option>
+						</select>
+					</div>
+					<div class="form-group">
+						<label>Type</label>
+						<select v-model="type" class="form-control">
+							<option value="null" disabled>Choose...</option>
+							<option v-for="type in types">{{ type }}</option>
+						</select>
+					</div>
+				</div>
+	
+				<div class="col-xl-2">
+					<div class="form-group">
+						<label>Entry</label>
+						<input type="number" v-model="entry" class="form-control" placeholder="1.000" />
+					</div>
+					<div class="form-group">
+						<label>Setup</label>
+						<select v-model="setup" class="form-control">
+							<option value="null" disabled>Choose...</option>
+							<option v-for="setup in setups">{{ setup }}</option>
+						</select>
+					</div>
+				</div>
+				<div class="col-xl-3">
+					<div class="row" style="margin-bottom: 1em;">
+						<div class="col-xl-4">
+							<label>Stop loss (pips)</label>
+							<input type="number" v-model="stop" class="form-control" placeholder="Pips.." />
+						</div>
+						<div class="col-xl-4">
+							<label>Take Profit (pips)</label>
+							<input type="number" v-model="profit" class="form-control" placeholder="Pips.." />
+						</div>
+						<div class="col-xl-4">
+							<label>Result (pips)</label>
+							<input type="number" v-model="result" class="form-control" placeholder="Pips.." />
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-xl-6">
+							<div class="form-group">
+								<label>Screenshot before</label>
+								<input v-model="before" class="form-control" placeholder="https://www.tradingview.com/x/QG1DNPUc/" />
+							</div>
+						</div>
+						<div class="col-xl-6">
+							<div class="form-group">
+								<label>Screenshot after</label>
+								<input v-model="after" class="form-control" placeholder="https://www.tradingview.com/x/QG1DNPUc/" />
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-xl-2">
+					<div class="form-group">
+						<label>Notes</label>
+						<textarea v-model="notes" class="form-control" placeholder="Notes..."></textarea>
+					</div>
+				</div>
+				<div class="col-xl-1">
+					<button v-on:click="addTrade" type="button" class="btn btn-outline-success" style="margin-top: 32px;">Add trade</button>
+				</div>
+			</div>
+			
+			<div class="row mt-3">
+				<div class="col-xl-12">
+					<table class="table table-striped">
+						<thead>
+							<th>Date</th>
+							<th>Pair</th>
+							<th>Direction</th>
+							<th>Type</th>
+							<th>Setup</th>
+							<th>Entry price</th>
+							<th>Stop loss</th>
+							<th>Take profit</th>
+							<th>Result</th>
+							<th>Notes</th>
+							<th>Before</th>
+							<th>After</th>
+							<th class="text-center">Edit</th>
+						</thead>
+						<tbody>
+							<tr v-for="trade in list" :key="trade.id">
+								<td width="11%">
+									<template v-if="trade.editing">
+										<input v-model="trade.date" type="datetime-local" class="form-control form-control-sm" />
+									</template>
+									<template v-else>
+										{{ trade.date }}
+									</template>
+								</td>
+								<td width="8%">
+									<template v-if="trade.editing">
+										<select v-model="trade.pair" class="form-control form-control-sm">
+											<option v-for="pair in pairs">{{ pair }}</option>
+										</select>
+									</template>
+									<template v-else>
+										{{ trade.pair }}
+									</template>
+								</td>
+								<td width="6%">
+									<template v-if="trade.editing">
+										<select v-model="trade.direction" class="form-control form-control-sm">
+											<option v-for="direction in directions">{{ direction }}</option>
+										</select>
+									</template>
+									<template v-else>
+										{{ trade.direction }}
+									</template>
+								</td>
+								<td width="9%">
+									<template v-if="trade.editing">
+										<select v-model="trade.type" class="form-control form-control-sm">
+											<option v-for="type in types">{{ type }}</option>
+										</select>
+									</template>
+									<template v-else>
+										{{ trade.type }}
+									</template>
+								</td>
+								<td width="9%">
+									<template v-if="trade.editing">
+										<select v-model="trade.setup" class="form-control form-control-sm">
+											<option v-for="setup in setups">{{ setup }}</option>
+										</select>
+									</template>
+									<template v-else>
+										{{ trade.setup }}
+									</template>
+								</td>
+								<td width="6%">
+									<template v-if="trade.editing">
+										<input v-model="trade.entry" class="form-control form-control-sm" />
+									</template>
+									<template v-else>
+										{{ trade.entry }}
+									</template>
+								</td>
+								<td width="6%">
+									<template v-if="trade.editing">
+										<input v-model="trade.stop" class="form-control form-control-sm" />
+									</template>
+									<template v-else>
+										{{ trade.stop }} pips
+									</template>
+								</td>
+								<td width="6%">
+									<template v-if="trade.editing">
+										<input v-model="trade.profit" class="form-control form-control-sm" />
+									</template>
+									<template v-else>
+										{{ trade.profit }} pips
+									</template>
+								</td>
+								<td width="6%">
+									<template v-if="trade.editing">
+										<input v-model="trade.result" class="form-control form-control-sm" />
+									</template>
+									<template v-else>
+										<span v-if="trade.result >= 0" class="text-success">{{ trade.result }} pips</span>
+										<span v-else class="text-danger">{{ trade.result }} pips</span>
+									</template>
+								</td>
+								<td width="6%" class="notes-container">
+									<template v-if="trade.editing">
+										<textarea v-model="trade.notes" class="form-control form-control-sm"></textarea>
+									</template>
+									<template v-else-if="trade.notes">
+										<button v-on:click="showNotes(trade.notes)" type="button" class="btn btn-sm btn-link m-0 p-0">Notes</button>
+									</template>
+								</td>
+								<td width="6%">
+									<template v-if="trade.editing">
+										<input v-model="trade.before" class="form-control form-control-sm" />
+									</template>
+									<template v-else-if="trade.before">
+										<a v-bind:href="trade.before" target="_blank">Before</a>
+									</template>
+								</td>
+								<td width="6%">
+									<template v-if="trade.editing">
+										<input v-model="trade.after" class="form-control form-control-sm" />
+									</template>
+									<template v-else-if="trade.after">
+										<a v-bind:href="trade.after" target="_blank">After</a>
+									</template>
+								</td>
+								<td width="8%" class="text-right">
+									<button v-on:click="editTrade(trade)" type="button" class="btn btn-sm btn-outline-primary">
+										<span v-if="trade.editing">Save</span>
+										<span v-if="!trade.editing">Edit</span>
+									</button>
+									<button v-on:click="deleteTrade(trade.id)" v-if="!trade.editing" type="button" class="btn btn-sm btn-outline-danger">Delete</button>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</template>
+		<!-- /TRADES -->
+
+		<!-- MODAL -->
+		<div class="modal" id="note-modal" tabindex="-1">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title">Notes for trade</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<div class="modal-body">
+						<p>{{ tradeNotes}}</p>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- /MODAL -->
+	</div>
+
+	<script src="js/vuejs.2.6.12.js"></script>
+	<script src="js/jquery-3.5.1.slim.min.js"></script>
+	<script src="js/bootstrap.bundle.min.js"></script>
+	<script src="js/moment.2.29.1.js"></script>
+	<script src="js/lodash-4.17.15.min.js"></script>
+	<script src="custom.js"></script>
+	<script src="main.js"></script>
+</body>
+
+</html>
