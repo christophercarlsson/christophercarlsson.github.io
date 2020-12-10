@@ -149,7 +149,8 @@ var vm = new Vue({
           total: grouped[prop].length,
           win: grouped[prop].filter((trade) => trade.result > 0).length,
           be: grouped[prop].filter((trade) => trade.result == 0).length,
-          loss: grouped[prop].filter((trade) => trade.result < 0).length
+          loss: grouped[prop].filter((trade) => trade.result < 0).length,
+          r: _.round(grouped[prop].reduce((total, trade) => total + parseFloat(trade.result / trade.stop), 0), 2)
         });
       }
 
@@ -168,7 +169,8 @@ var vm = new Vue({
           total: grouped[prop].length,
           win: grouped[prop].filter((trade) => trade.result > 0).length,
           be: grouped[prop].filter((trade) => trade.result == 0).length,
-          loss: grouped[prop].filter((trade) => trade.result < 0).length
+          loss: grouped[prop].filter((trade) => trade.result < 0).length,
+          r: _.round(grouped[prop].reduce((total, trade) => total + parseFloat(trade.result / trade.stop), 0), 2)
         });
       }
 
@@ -193,13 +195,7 @@ var vm = new Vue({
     },
 
     r: function() {
-      var r = 0;
-      this.list.forEach(trade => {
-        let stop = trade.stop;
-        let result = trade.result;
-          r += result / stop;
-      });
-      return _.round(r, 2);
+      return _.round(this.list.reduce((total, trade) => total + parseFloat(trade.result / trade.stop), 0), 2)
     }
   },
 
@@ -335,7 +331,8 @@ var vm = new Vue({
           total: this.list.filter((trade) => trade[property] == prop).length,
           win: this.list.filter((trade) => trade[property] == prop && trade.result > 0).length,
           be: this.list.filter((trade) => trade[property] == prop && trade.result == 0).length,
-          loss: this.list.filter((trade) => trade[property] == prop && trade.result < 0).length
+          loss: this.list.filter((trade) => trade[property] == prop && trade.result < 0).length,
+          r: _.round(this.list.filter((trade) => trade[property] == prop).reduce((total, trade) => total + parseFloat(trade.result / trade.stop), 0), 2)
         };
       }).filter((row) => {
         if (noZeros) {
@@ -346,16 +343,8 @@ var vm = new Vue({
     },
 
     sort: function(a, b) {
-      let awp = this.percent(a.win, a.total);
-      let bwp = this.percent(b.win, b.total);
-      if (awp < bwp) return 1;
-      if (awp > bwp) return -1;
-      if (awp == bwp) {
-        let abep = this.percent(a.be, a.total);
-        let bbep = this.percent(b.be, b.total);
-        if (abep < bbep) return 1;
-        if (abep > bbep) return -1;
-      }
+      if (a.r < b.r) return 1;
+      if (a.r > b.r) return -1;
       return 0;
     },
 

@@ -63,6 +63,7 @@
 									<th>Wins</th>
 									<th>B/E</th>
 									<th>Losses</th>
+									<th>Return</th>
 								</thead>
 								<tbody>
 									<tr v-for="pair in bestPairs">
@@ -71,6 +72,7 @@
 										<td>{{ percent(pair.win, pair.total) }}% ({{ pair.win }})</td>
 										<td>{{ percent(pair.be, pair.total) }}% ({{ pair.be }})</td>
 										<td>{{ percent(pair.loss, pair.total) }}% ({{ pair.loss }})</td>
+										<td>{{ pair.r }}R</td>
 									</tr>
 								</tbody>
 							</table>
@@ -84,6 +86,7 @@
 									<th>Wins</th>
 									<th>B/E</th>
 									<th>Losses</th>
+									<th>Return</th>
 								</thead>
 								<tbody>
 									<tr v-for="setup in bestSetups">
@@ -92,6 +95,7 @@
 										<td>{{ percent(setup.win, setup.total) }}% ({{ setup.win }})</td>
 										<td>{{ percent(setup.be, setup.total) }}% ({{ setup.be }})</td>
 										<td>{{ percent(setup.loss, setup.total) }}% ({{ setup.loss }})</td>
+										<td>{{ setup.r }}R</td>
 									</tr>
 								</tbody>
 							</table>
@@ -105,6 +109,7 @@
 									<th>Wins</th>
 									<th>B/E</th>
 									<th>Losses</th>
+									<th>Return</th>
 								</thead>
 								<tbody>
 									<tr v-for="direction in bestDirections">
@@ -113,6 +118,7 @@
 										<td>{{ percent(direction.win, direction.total) }}% ({{ direction.win }})</td>
 										<td>{{ percent(direction.be, direction.total) }}% ({{ direction.be }})</td>
 										<td>{{ percent(direction.loss, direction.total) }}% ({{ direction.loss }})</td>
+										<td>{{ direction.r }}R</td>
 									</tr>
 								</tbody>
 							</table>
@@ -128,6 +134,7 @@
 									<th>Wins</th>
 									<th>B/E</th>
 									<th>Losses</th>
+									<th>Return</th>
 								</thead>
 								<tbody>
 									<tr v-for="type in bestTypes">
@@ -136,6 +143,7 @@
 										<td>{{ percent(type.win, type.total) }}% ({{ type.win }})</td>
 										<td>{{ percent(type.be, type.total) }}% ({{ type.be }})</td>
 										<td>{{ percent(type.loss, type.total) }}% ({{ type.loss }})</td>
+										<td>{{ type.r }}R</td>
 									</tr>
 								</tbody>
 							</table>
@@ -149,6 +157,7 @@
 									<th>Wins</th>
 									<th>B/E</th>
 									<th>Losses</th>
+									<th>Return</th>
 								</thead>
 								<tbody>
 									<tr v-for="hour in bestHours">
@@ -157,6 +166,7 @@
 										<td>{{ percent(hour.win, hour.total) }}% ({{ hour.win }})</td>
 										<td>{{ percent(hour.be, hour.total) }}% ({{ hour.be }})</td>
 										<td>{{ percent(hour.loss, hour.total) }}% ({{ hour.loss }})</td>
+										<td>{{ hour.r }}R</td>
 									</tr>
 								</tbody>
 							</table>
@@ -170,6 +180,7 @@
 									<th>Wins</th>
 									<th>B/E</th>
 									<th>Losses</th>
+									<th>Return</th>
 								</thead>
 								<tbody>
 									<tr v-for="day in bestDay">
@@ -178,6 +189,7 @@
 										<td>{{ percent(day.win, day.total) }}% ({{ day.win }})</td>
 										<td>{{ percent(day.be, day.total) }}% ({{ day.be }})</td>
 										<td>{{ percent(day.loss, day.total) }}% ({{ day.loss }})</td>
+										<td>{{ day.r }}R</td>
 									</tr>
 								</tbody>
 							</table>
@@ -417,7 +429,8 @@
 										<input v-model="trade.result" class="form-control form-control-sm" />
 									</template>
 									<template v-else>
-										<span v-if="trade.result >= 0" class="text-success">{{ trade.result }} pips</span>
+										<span v-if="trade.result > 0" class="text-success">{{ trade.result }} pips</span>
+										<span v-else-if="trade.result == 0" class="text-warning">{{ trade.result }} pips</span>
 										<span v-else class="text-danger">{{ trade.result }} pips</span>
 									</template>
 								</td>
