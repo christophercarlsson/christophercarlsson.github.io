@@ -59,5 +59,8 @@ Please, advanced users only.
 ###
 ## Changelog
 #
+Version 2
+Added filters and R's to statistics.
+
 Version 1
 Initial version.
