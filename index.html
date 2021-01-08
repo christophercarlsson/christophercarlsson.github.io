@@ -493,14 +493,25 @@
 										{{ trade.profit }} pips
 									</template>
 								</td>
-								<td width="6%">
+								<td width="8%">
 									<template v-if="trade.editing">
 										<input v-model="trade.result" class="form-control form-control-sm" />
 									</template>
 									<template v-else>
-										<span v-if="trade.result > 0" class="text-success">{{ trade.result }} pips</span>
-										<span v-else-if="trade.result == 0" class="text-warning">{{ trade.result }} pips</span>
-										<span v-else class="text-danger">{{ trade.result }} pips</span>
+										<template v-if="trade.result > 0">
+											<span class="text-success">{{ trade.result }} pips</span>
+											<span class="text-success float-right">{{_.round(trade.result / trade.stop, 2) }}R</span>
+										</template>
+
+										<template v-else-if="trade.result == 0">
+											<span class="text-warning">{{ trade.result }} pips</span>
+											<span class="text-warning float-right">{{ _.round(trade.result / trade.stop, 2) }}R</span>
+										</template>
+
+										<template v-else>
+											<span class="text-danger">{{ trade.result }} pips</span>
+											<span class="text-danger float-right">{{ _.round(trade.result / trade.stop, 2) }}R</span>
+										</template>
 									</template>
 								</td>
 								<td width="6%" class="notes-container">
