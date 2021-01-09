@@ -73,6 +73,7 @@ var vm = new Vue({
       "USDCHF",
       "USDJPY",
     ],
+    disabledPairs: [],
 
     directions: [
       "Long",
@@ -94,6 +95,7 @@ var vm = new Vue({
       "Deep pullback",
       "BOBBI"
     ],
+    disabledSetups: [],
 
     darkmode: false,
   },
@@ -116,6 +118,14 @@ var vm = new Vue({
 
     if (localStorage.getItem("groups") != null) {
       this.groups = JSON.parse(localStorage.getItem("groups"));
+    }
+
+    if (localStorage.getItem("disabled-pairs") != null) {
+      this.disabledPairs = JSON.parse(localStorage.getItem("disabled-pairs"));
+    }
+
+    if (localStorage.getItem("disabled-setups") != null) {
+      this.disabledSetups = JSON.parse(localStorage.getItem("disabled-setups"));
     }
 
     if (localStorage.getItem("darkmode") != null) {
@@ -310,6 +320,14 @@ var vm = new Vue({
         filters.push('End Date');
       }
       return filters;
+    },
+
+    enabledPairs: function() {
+      return this.pairs.filter((pair) => !this.disabledPairs.includes(pair));
+    },
+
+    enabledSetups: function() {
+      return this.setups.filter((setup) => !this.disabledSetups.includes(setup));
     }
   },
 
@@ -440,6 +458,28 @@ var vm = new Vue({
     showNotes: function(notes) {
       this.tradeNotes = notes;
       $(`#note-modal`).modal('show');
+    },
+
+    togglePair: function(pair) {
+      const index = this.disabledPairs.indexOf(pair);
+      if (index > -1) {
+        this.disabledPairs.splice(index, 1);
+      } else {
+        this.disabledPairs.push(pair);
+      }
+
+      localStorage.setItem("disabled-pairs", JSON.stringify(this.disabledPairs));
+    },
+
+    toggleSetup: function(setup) {
+      const index = this.disabledSetups.indexOf(setup);
+      if (index > -1) {
+        this.disabledSetups.splice(index, 1);
+      } else {
+        this.disabledSetups.push(setup);
+      }
+
+      localStorage.setItem("disabled-setups", JSON.stringify(this.disabledSetups));
     },
 
     statistics: function(array, property, noZeros) {

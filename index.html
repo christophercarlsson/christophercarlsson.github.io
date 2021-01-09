@@ -270,7 +270,7 @@
 						<label>Pair</label>
 						<select v-model="pair" class="form-control">
 							<option value="null" disabled>Choose...</option>
-							<option v-for="pair in pairs">{{ pair }}</option>
+							<option v-for="pair in enabledPairs">{{ pair }}</option>
 						</select>
 					</div>
 					<div class="form-group">
@@ -291,7 +291,7 @@
 						<label>Setup</label>
 						<select v-model="setup" class="form-control">
 							<option value="null" disabled>Choose...</option>
-							<option v-for="setup in setups">{{ setup }}</option>
+							<option v-for="setup in enabledSetups">{{ setup }}</option>
 						</select>
 					</div>
 				</div>
@@ -601,16 +601,40 @@
 					</div>
 					<div class="modal-body">
 						<div class="row mt-3">
-							<div class="col-xl-10">Dark mode</div>
+							<div class="col-xl-10"><h6>Dark mode</h6></div>
 							<div class="col-xl-2"><input v-model="darkmode" type="checkbox" class="form-check-input" /></div>
 						</div>
 
 						<div class="row mt-3">
-							<div class="col-xl-8">Backup</div>
+							<div class="col-xl-8"><h6>Backup</h6></div>
 							<div class="col-xl-4">
 								<button v-on:click="backup" class="btn btn-sm btn-primary">Backup</button>
 								<button v-on:click="restore" class="btn btn-sm btn-danger">Restore</button>
-								<input type="file" class="custom-file-input" style="visibility: hidden;" id="restoreBackup">
+								<input type="file" class="custom-file-input" style="display: none;" id="restoreBackup">
+							</div>
+						</div>
+
+						<div class="row mt-3">
+							<div class="col-xl-8"><h6>Pairs</h6></div>
+						</div>
+						<div class="row">
+							<div class="col-xl-12">
+								<span v-for="pair in pairs"
+									  v-on:click="togglePair(pair)"
+									  v-bind:class="{ 'badge-success': !disabledPairs.includes(pair) }"
+									  class="badge mr-2 mb-2">{{ pair }}</span>
+							</div>
+						</div>
+
+						<div class="row mt-3">
+							<div class="col-xl-8"><h6>Setups</h6></div>
+						</div>
+						<div class="row">
+							<div class="col-xl-12">
+								<span v-for="setup in setups"
+									  v-on:click="toggleSetup(setup)"
+									  v-bind:class="{ 'badge-success': !disabledSetups.includes(setup) }"
+									  class="badge mr-2 mb-2">{{ setup }}</span>
 							</div>
 						</div>
 					</div>
