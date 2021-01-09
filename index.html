@@ -57,7 +57,28 @@
 					</div>
 				</div>
 
-				<template v-if="showStats">
+				<div v-show="showStats">
+					<div class="row mb-5">
+						<div class="col-xl-8 offset-xl-2">
+							<div style="width: 100%; height: 400px;">
+								<canvas id="progress" height="400"></canvas>
+							</div>
+						</div>
+						<div class="col-xl-2">
+							<div style="margin-top: 100px;">
+								<h6>Max return</h6>
+								<span class="text-success">{{ maxReturn }}R</span>
+							</div>
+							<div class="mt-5">
+								<h6>Average return</h6>
+								{{ averageReturn }}R
+							</div>
+							<div class="mt-5">
+								<h6>Max drawdown</h6>
+								<span class="text-danger">{{ maxDrawDown }}R</span>
+							</div>
+						</div>
+					</div>
 					<div class="row">
 						<div class="col-xl-4">
 							<table class="table table-striped">
@@ -242,7 +263,7 @@
 							</div>
 						</div>
 					</div>
-				</template>
+				</div>
 			</div>
 		</div>
 		<!-- /STATISTICS -->
@@ -602,12 +623,12 @@
 					<div class="modal-body">
 						<div class="row mt-3">
 							<div class="col-xl-10"><h6>Dark mode</h6></div>
-							<div class="col-xl-2"><input v-model="darkmode" type="checkbox" class="form-check-input" /></div>
+							<div class="col-xl-2 text-right"><input v-model="darkmode" type="checkbox" class="form-check-input" /></div>
 						</div>
 
 						<div class="row mt-3">
 							<div class="col-xl-8"><h6>Backup</h6></div>
-							<div class="col-xl-4">
+							<div class="col-xl-4 text-right">
 								<button v-on:click="backup" class="btn btn-sm btn-primary">Backup</button>
 								<button v-on:click="restore" class="btn btn-sm btn-danger">Restore</button>
 								<input type="file" class="custom-file-input" style="display: none;" id="restoreBackup">
@@ -615,10 +636,13 @@
 						</div>
 
 						<div class="row mt-5">
-							<div class="col-xl-3"><h6>Pairs</h6></div>
+							<div class="col-xl-3">
+								<h6 class="mb-0">Pairs</h6>
+								<span class="text-muted" style="font-size: 10px;">(Click pair to toggle on/off)</span>
+							</div>
 							<div class="col-xl-9 text-right">
 								<input v-model="newPair" class="form-control form-control-sm d-inline-block" style="width: 30%;" type="text" placeholder="New pair..." />
-								<button v-on:click="addPair" class="btn btn-sm btn-success d-inline-block">Add pair</button>
+								<button v-on:click="addPair" class="btn btn-sm btn-success d-inline-block ml-2" style="width: 15%;">Add pair</button>
 							</div>
 						</div>
 						<div class="row mt-3">
@@ -634,10 +658,13 @@
 						</div>
 
 						<div class="row mt-5">
-							<div class="col-xl-3"><h6>Setups</h6></div>
+							<div class="col-xl-3">
+								<h6 class="mb-0">Setups</h6>
+								<span class="text-muted" style="font-size: 10px;">(Click setup to toggle on/off)</span>
+							</div>
 							<div class="col-xl-9 text-right">
 								<input v-model="newSetup" class="form-control form-control-sm d-inline-block" style="width: 30%;" type="text" placeholder="New setup..." />
-								<button v-on:click="addSetup" class="btn btn-sm btn-success d-inline-block">Add setup</button>
+								<button v-on:click="addSetup" class="btn btn-sm btn-success d-inline-block ml-2" style="width: 15%;">Add setup</button>
 							</div>
 						</div>
 						<div class="row mt-3">

@@ -10,6 +10,10 @@ var vm = new Vue({
     groups: [],
     trades: [],
 
+    chart: null,
+    maxDrawDown: 0,
+    maxReturn: 0,
+    averageReturn: 0,
     showStats: false,
     showFilters: false,
     risk: null,
@@ -111,6 +115,10 @@ var vm = new Vue({
         vm.setDarkmodeOnBody();
       });
     },
+
+    list: function() {
+      vm.setupChart();
+    }
   },
 
   created: function () {
@@ -151,6 +159,8 @@ var vm = new Vue({
     };
 
     $(document).ready(() => {
+      vm.setupChart();
+
       $(document).find('.cpop').popover({
         trigger: 'hover'
       });
@@ -175,8 +185,6 @@ var vm = new Vue({
       }); 
 
     });
-
-    this.setupChart();
   },
 
   components: {
@@ -340,6 +348,68 @@ var vm = new Vue({
   },
 
   methods: {
+    setupChart: function() {
+      if (this.chart != null) {
+        this.chart.destroy();
+      }
+
+      const labels = this.list.map((trade) => trade.date).reverse();
+      const dataset = [];
+
+      let previousR = 0;
+      this.list.forEach((trade) => {
+        const r = trade.result / trade.stop;
+        const sum = _.round(previousR + r, 2);
+        dataset.push(sum);
+        previousR = sum;
+      });
+
+      this.maxDrawDown = Math.min(_.min(dataset), 0);
+      this.maxReturn = Math.max(_.max(dataset), 0);
+      this.averageReturn = dataset.length > 0 ? _.round(dataset.reduce((acc, el, index) => (acc + el) / (index + 1)), 2) : 0;
+
+      this.chart = new Chart(document.getElementById('progress').getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{ 
+              data: dataset,
+              borderColor: "#3e95cd",
+              fill: false,
+              pointRadius: 5
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            xAxes: [{
+              display: false
+            }],
+            yAxes: [{
+              gridLines: {
+                color: "#eeeeee"
+              }
+            }]
+          },
+          title: {
+            display: false
+          },
+          legend: {
+            display: false,
+          },
+          tooltips: {
+            callbacks: {
+              label: function(tooltipItem, data) {
+                return tooltipItem.value + 'R';
+              },
+            }
+          }
+        }
+      });
+    },
+
     openSettings: function() {
       $(`#settings-modal`).modal('show');
     },
