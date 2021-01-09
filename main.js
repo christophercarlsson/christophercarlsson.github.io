@@ -92,6 +92,17 @@ var vm = new Vue({
       "Deep pullback",
       "BOBBI"
     ],
+
+    darkmode: false,
+  },
+
+  watch: {
+    darkmode: function (val) {
+      localStorage.setItem('darkmode', val ? 1 : 0);
+      Vue.nextTick(function () {
+        vm.setDarkmodeOnBody();
+      });
+    },
   },
 
   created: function () {
@@ -105,6 +116,10 @@ var vm = new Vue({
       this.groups = JSON.parse(localStorage.getItem("groups"));
     }
 
+    if (localStorage.getItem("darkmode") != null) {
+      this.darkmode = localStorage.getItem("darkmode") == 1;
+    }
+
     document.onkeypress = function (e) {
         e = e || window.event;
         if (e.keyCode == 13) vm.addTrade();
@@ -113,14 +128,15 @@ var vm = new Vue({
     $(document).ready(() => {
       $(document).find('.cpop').popover({
         trigger: 'hover'
-      })
+      });
     });
     
-
     if (typeof custom !== 'undefined') {
       this.pairs.push(...custom.customPairs);
       this.setups.push(...custom.customSetups);
     }
+
+    this.setupChart();
   },
 
   components: {
@@ -260,6 +276,10 @@ var vm = new Vue({
   },
 
   methods: {
+    openSettings: function() {
+      $(`#settings-modal`).modal('show');
+    },
+
     addTrade: function() {
       if (_.isEmpty(this.date)) {
         alert("Must enter a date");
@@ -434,5 +454,13 @@ var vm = new Vue({
 
       localStorage.setItem("version", version);
     },
+
+    setDarkmodeOnBody: function() {
+      if ($(".container-fluid").hasClass("dark-mode")) {
+        $("body").addClass('dark-mode');
+      } else {
+        $("body").removeClass('dark-mode');
+      }
+    }
   }
 });

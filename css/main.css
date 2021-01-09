@@ -1,0 +1,49 @@
+body.dark-mode {
+	background-color: #1f1f1f;
+	color: rgb(226, 226, 226);
+}
+
+body.dark-mode select.form-control,
+body.dark-mode input.form-control,
+body.dark-mode textarea.form-control,
+body.dark-mode div.multiselect__select,
+body.dark-mode div.multiselect__tags {
+	background-color: rgb(26, 26, 26);
+	color: rgb(226, 226, 226);
+	border: 1px solid #000000
+}
+
+body.dark-mode span.multiselect__single,
+body.dark-mode input.multiselect__input {
+	background-color: rgb(26, 26, 26);
+}
+
+body.dark-mode table.table {
+	color: rgb(226, 226, 226);
+}
+
+body.dark-mode table.table thead th {
+	border-bottom: 2px solid #000000;
+}
+
+body.dark-mode table.table td, body.dark-mode table.table th {
+	border-top: 1px solid #000000;
+}
+
+body.dark-mode table.table-striped tbody tr:nth-of-type(odd) {
+	background-color: rgb(15, 15, 15);
+}
+
+body.dark-mode div.modal-content {
+	background-color: #1f1f1f;
+	color: rgb(226, 226, 226);
+}
+
+.settings {
+	position: absolute;
+	width: 40px;
+	height: 40px;
+	top: 15px;
+	right: 15px;
+	cursor: pointer;
+}

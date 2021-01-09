@@ -6,11 +6,13 @@
 
 	<link rel="stylesheet" href="css/vue-multiselect.2.1.0.min.css" />
 	<link rel="stylesheet" href="css/bootstrap.min.css" />
+	<link rel="stylesheet" href="css/all.min.css" />
+	<link rel="stylesheet" href="css/main.css" />
 	<title>Positions</title>
 </head>
 
 <body>
-	<div class="container-fluid">
+	<div class="container-fluid" v-bind:class="{ 'dark-mode': darkmode }">
 		<!-- SESSION -->
 		<div class="row">
 			<div class="col-xl-8">
@@ -36,6 +38,7 @@
 				</div>
 			</div>
 		</div>
+		<button v-on:click="openSettings" class="settings btn btn-sm btn-primary"><i class="fas fa-cogs"></i></button>
 		<!-- /SESSION -->
 
 		<!-- STATISTICS -->
@@ -572,9 +575,32 @@
 				</div>
 			</div>
 		</div>
+
+		<div class="modal" id="settings-modal" tabindex="-1">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title">Settings</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<div class="modal-body">
+						<div class="row">
+							<div class="col-xl-10">Dark mode</div>
+							<div class="col-xl-2"><input v-model="darkmode" type="checkbox" class="form-check-input" /></div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
 		<!-- /MODAL -->
 	</div>
 
+	<script src="js/chartjs-2.9.4.min.js"></script>
 	<script src="js/vuejs.2.6.12.js"></script>
 	<script src="js/jquery-3.5.1.slim.min.js"></script>
 	<script src="js/bootstrap.bundle.min.js"></script>
