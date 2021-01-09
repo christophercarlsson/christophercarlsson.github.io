@@ -23,6 +23,8 @@ var vm = new Vue({
     filteredDays: [],
     filteredHours: [],
     filteredResults: [],
+    filteredStartDate: null,
+    filteredEndDate: null,
 
     resultOptions: ['Win', 'Break even', 'Loss'],
     daysOptions: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
@@ -195,13 +197,22 @@ var vm = new Vue({
           if (trade.result < 0 && !this.filteredResults.includes('Loss')) return false;
         }
 
-        let tradeDay = moment(trade.date).format('dddd');
+        let tradeDate = moment(trade.date);
+        let tradeDay = tradeDate.format('dddd');
         if (!_.isEmpty(this.filteredDays) && !this.filteredDays.includes(tradeDay)) {
           return false;
         }
 
-        let tradeHour = moment(trade.date).format('HH');
+        let tradeHour = tradeDate.format('HH');
         if (!_.isEmpty(this.filteredHours) && !this.filteredHours.includes(tradeHour)) {
+          return false;
+        }
+
+        if (!_.isEmpty(this.filteredStartDate) && tradeDate.isBefore(moment(this.filteredStartDate))) {
+          return false;
+        }
+
+        if (!_.isEmpty(this.filteredEndDate) && tradeDate.isAfter(moment(this.filteredEndDate))) {
           return false;
         }
 
@@ -291,7 +302,14 @@ var vm = new Vue({
     },
 
     activeFilters: function() {
-      return [...this.filteredPairs, ...this.filteredDirections, ...this.filteredTypes, ...this.filteredSetups, ...this.filteredDays, ...this.filteredHours, ...this.filteredResults];
+      let filters = [...this.filteredPairs, ...this.filteredDirections, ...this.filteredTypes, ...this.filteredSetups, ...this.filteredDays, ...this.filteredHours, ...this.filteredResults];
+      if (this.filteredStartDate != null) {
+        filters.push('Start Date');
+      }
+      if (this.filteredEndDate != null) {
+        filters.push('End Date');
+      }
+      return filters;
     }
   },
 
