@@ -1,4 +1,4 @@
-let version = 2;
+let version = 3;
 let vueselect = Vue.component('vue-multiselect', window.VueMultiselect.default)
 
 var vm = new Vue({
@@ -143,6 +143,7 @@ var vm = new Vue({
 
     if (localStorage.getItem("custom-setups") != null) {
       this.customSetups = JSON.parse(localStorage.getItem("custom-setups"));
+      this.setups.push(...this.customSetups);
     }
 
     if (localStorage.getItem("disabled-setups") != null) {

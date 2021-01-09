@@ -59,6 +59,15 @@ Please, advanced users only.
 ###
 ## Changelog
 #
+Version 3
+- Fixed bug where it didn't select the new trading session you created automatically
+- Added a progressive R chart for the statistics, much like the FTMO one
+- Ability to add custom pairs and setups through the UI
+- Ability to turn off pairs and setups you're not using through the UI
+- Start and end date filter
+- Dark mode
+- Backup and restoration of data
+
 Version 2
 Added filters and R's to statistics.
 
