@@ -358,7 +358,7 @@ var vm = new Vue({
       const dataset = [];
 
       let previousR = 0;
-      this.list.reverse().forEach((trade) => {
+      this.list.slice().reverse().forEach((trade) => {
         const r = trade.result / trade.stop;
         const sum = _.round(previousR + r, 2);
         dataset.push(sum);
