@@ -532,6 +532,8 @@ var vm = new Vue({
       } else {
         trade.editing = !trade.editing;
       }
+      
+      this.setupChart();
     },
 
     showNotes: function(notes) {
