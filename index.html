@@ -577,7 +577,7 @@
 		</div>
 
 		<div class="modal" id="settings-modal" tabindex="-1">
-			<div class="modal-dialog">
+			<div class="modal-dialog modal-lg">
 				<div class="modal-content">
 					<div class="modal-header">
 						<h5 class="modal-title">Settings</h5>
@@ -586,9 +586,18 @@
 						</button>
 					</div>
 					<div class="modal-body">
-						<div class="row">
+						<div class="row mt-3">
 							<div class="col-xl-10">Dark mode</div>
 							<div class="col-xl-2"><input v-model="darkmode" type="checkbox" class="form-check-input" /></div>
+						</div>
+
+						<div class="row mt-3">
+							<div class="col-xl-8">Backup</div>
+							<div class="col-xl-4">
+								<button v-on:click="backup" class="btn btn-sm btn-primary">Backup</button>
+								<button v-on:click="restore" class="btn btn-sm btn-danger">Restore</button>
+								<input type="file" class="custom-file-input" style="visibility: hidden;" id="restoreBackup">
+							</div>
 						</div>
 					</div>
 					<div class="modal-footer">

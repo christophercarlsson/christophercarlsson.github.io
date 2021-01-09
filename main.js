@@ -129,6 +129,26 @@ var vm = new Vue({
       $(document).find('.cpop').popover({
         trigger: 'hover'
       });
+
+      document.getElementById('restoreBackup').addEventListener('change', function() { 
+        let reader = new FileReader(); 
+        reader.onload = function() { 
+          let result = reader.result;
+          let json = JSON.parse(result);
+
+          if (json.hasOwnProperty('trades') && json.hasOwnProperty('groups')) {
+            localStorage.setItem('trades', JSON.stringify(json.trades));
+            localStorage.setItem('groups', JSON.stringify(json.groups));
+
+            Vue.set(vm, 'trades', json.trades);
+            Vue.set(vm, 'groups', json.groups);
+            alert('Successfully imported your data.');
+            $(`#settings-modal`).modal('hide');
+          }
+        }
+        reader.readAsText(this.files[0]); 
+      }); 
+
     });
     
     if (typeof custom !== 'undefined') {
@@ -461,6 +481,30 @@ var vm = new Vue({
       } else {
         $("body").removeClass('dark-mode');
       }
+    },
+
+    backup: function() {
+      this.download('positions.json', JSON.stringify({
+        'trades': this.trades,
+        'groups': this.groups
+      }));
+    },
+
+    restore: function() {
+      $('#restoreBackup').click();
+    },
+
+    download: function(filename, text) {
+      var element = document.createElement('a');
+      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+      element.setAttribute('download', filename);
+    
+      element.style.display = 'none';
+      document.body.appendChild(element);
+    
+      element.click();
+    
+      document.body.removeChild(element);
     }
   }
 });
