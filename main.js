@@ -15,6 +15,8 @@ var vm = new Vue({
     risk: null,
     money: null,
     tradeNotes: null,
+    newPair: null,
+    newSetup: null,
 
     filteredPairs: [],
     filteredDirections: [],
@@ -73,6 +75,7 @@ var vm = new Vue({
       "USDCHF",
       "USDJPY",
     ],
+    customPairs: [],
     disabledPairs: [],
 
     directions: [
@@ -95,6 +98,7 @@ var vm = new Vue({
       "Deep pullback",
       "BOBBI"
     ],
+    customSetups: [],
     disabledSetups: [],
 
     darkmode: false,
@@ -120,8 +124,17 @@ var vm = new Vue({
       this.groups = JSON.parse(localStorage.getItem("groups"));
     }
 
+    if (localStorage.getItem("custom-pairs") != null) {
+      this.customPairs = JSON.parse(localStorage.getItem("custom-pairs"));
+      this.pairs.push(...this.customPairs);
+    }
+
     if (localStorage.getItem("disabled-pairs") != null) {
       this.disabledPairs = JSON.parse(localStorage.getItem("disabled-pairs"));
+    }
+
+    if (localStorage.getItem("custom-setups") != null) {
+      this.customSetups = JSON.parse(localStorage.getItem("custom-setups"));
     }
 
     if (localStorage.getItem("disabled-setups") != null) {
@@ -162,11 +175,6 @@ var vm = new Vue({
       }); 
 
     });
-    
-    if (typeof custom !== 'undefined') {
-      this.pairs.push(...custom.customPairs);
-      this.setups.push(...custom.customSetups);
-    }
 
     this.setupChart();
   },
@@ -480,6 +488,56 @@ var vm = new Vue({
       }
 
       localStorage.setItem("disabled-setups", JSON.stringify(this.disabledSetups));
+    },
+
+    addPair: function() {
+      if (_.isEmpty(this.newPair) || this.customPairs.includes(this.newPair)) {
+        return;
+      }
+
+      this.customPairs.push(this.newPair);
+      this.pairs.push(this.newPair);
+      this.newPair = null;
+      localStorage.setItem("custom-pairs", JSON.stringify(this.customPairs));
+    },
+
+    removePair: function(pair) {
+      const customIndex = this.customPairs.indexOf(pair);
+      if (customIndex > -1) {
+        this.customPairs.splice(customIndex, 1);
+      }
+
+      const index = this.pairs.indexOf(pair);
+      if (index > -1) {
+        this.pairs.splice(index, 1);
+      }
+
+      localStorage.setItem("custom-pairs", JSON.stringify(this.customPairs));
+    },
+
+    addSetup: function() {
+      if (_.isEmpty(this.newSetup) || this.customSetups.includes(this.newSetup)) {
+        return;
+      }
+
+      this.customSetups.push(this.newSetup);
+      this.setups.push(this.newSetup);
+      this.newSetup = null;
+      localStorage.setItem("custom-setups", JSON.stringify(this.customSetups));
+    },
+
+    removeSetup: function(setup) {
+      const customIndex = this.customSetups.indexOf(setup);
+      if (customIndex > -1) {
+        this.customSetups.splice(customIndex, 1);
+      }
+
+      const index = this.setups.indexOf(setup);
+      if (index > -1) {
+        this.setups.splice(index, 1);
+      }
+
+      localStorage.setItem("custom-setups", JSON.stringify(this.customSetups));
     },
 
     statistics: function(array, property, noZeros) {

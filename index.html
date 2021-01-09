@@ -614,27 +614,41 @@
 							</div>
 						</div>
 
-						<div class="row mt-3">
-							<div class="col-xl-8"><h6>Pairs</h6></div>
+						<div class="row mt-5">
+							<div class="col-xl-3"><h6>Pairs</h6></div>
+							<div class="col-xl-9 text-right">
+								<input v-model="newPair" class="form-control form-control-sm d-inline-block" style="width: 30%;" type="text" placeholder="New pair..." />
+								<button v-on:click="addPair" class="btn btn-sm btn-success d-inline-block">Add pair</button>
+							</div>
 						</div>
-						<div class="row">
+						<div class="row mt-3">
 							<div class="col-xl-12">
 								<span v-for="pair in pairs"
 									  v-on:click="togglePair(pair)"
 									  v-bind:class="{ 'badge-success': !disabledPairs.includes(pair) }"
-									  class="badge mr-2 mb-2">{{ pair }}</span>
+									  class="badge mr-2 mb-2">{{ pair }}
+									
+									  <i v-if="customPairs.includes(pair)" v-on:click="removePair(pair)" class="fas fa-times ml-2" style="color: black; cursor: pointer;"></i>
+									</span>
 							</div>
 						</div>
 
-						<div class="row mt-3">
-							<div class="col-xl-8"><h6>Setups</h6></div>
+						<div class="row mt-5">
+							<div class="col-xl-3"><h6>Setups</h6></div>
+							<div class="col-xl-9 text-right">
+								<input v-model="newSetup" class="form-control form-control-sm d-inline-block" style="width: 30%;" type="text" placeholder="New setup..." />
+								<button v-on:click="addSetup" class="btn btn-sm btn-success d-inline-block">Add setup</button>
+							</div>
 						</div>
-						<div class="row">
+						<div class="row mt-3">
 							<div class="col-xl-12">
 								<span v-for="setup in setups"
 									  v-on:click="toggleSetup(setup)"
 									  v-bind:class="{ 'badge-success': !disabledSetups.includes(setup) }"
-									  class="badge mr-2 mb-2">{{ setup }}</span>
+									  class="badge mr-2 mb-2">{{ setup }}
+									
+									  <i v-if="customSetups.includes(setup)" v-on:click="removeSetup(setup)" class="fas fa-times ml-2" style="color: black; cursor: pointer;"></i>
+									</span>
 							</div>
 						</div>
 					</div>
@@ -654,7 +668,6 @@
 	<script src="js/moment.2.29.1.js"></script>
 	<script src="js/lodash-4.17.15.min.js"></script>
 	<script src="js/vue-multiselect.2.1.0.min.js"></script>
-	<script src="custom.js"></script>
 	<script src="main.js"></script>
 </body>
 
