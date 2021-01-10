@@ -683,9 +683,16 @@ var vm = new Vue({
       $('#restoreBackup').click();
     },
 
-    download: function(filename, text) {
+    excel: function() {
+      const headers = 'date;pair;direction;setup;type;entry;profit;stop;result;r;before;after;\r\n'
+      const trades = headers + this.list.map((trade) => `${trade.date};${trade.pair};${trade.direction};${trade.setup};${trade.type};${trade.entry};${trade.profit};${trade.stop};${trade.result};${_.round(trade.result / trade.stop, 2)};${_.defaultTo(trade.before, '')};${_.defaultTo(trade.after, '')};\r\n`).join('');
+      const result = trades.substring(0, trades.length - 4);
+      this.download(`trade-export_${moment().format('yyyy-MM-DD')}.csv`, result, 'text/csv');
+    },
+
+    download: function(filename, text, data = 'text/plain') {
       var element = document.createElement('a');
-      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+      element.setAttribute('href', `data:${data};charset=utf-8,` + encodeURIComponent(text));
       element.setAttribute('download', filename);
     
       element.style.display = 'none';
