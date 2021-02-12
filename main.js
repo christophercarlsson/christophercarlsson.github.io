@@ -1,4 +1,4 @@
-let version = 3;
+let version = 4;
 let vueselect = Vue.component('vue-multiselect', window.VueMultiselect.default)
 
 var vm = new Vue({
@@ -44,7 +44,7 @@ var vm = new Vue({
     entry: null,
     stop: null,
     profit: null,
-    result: null,
+    result: [{pips: null, closed: null}],
     notes: null,
     before: null,
     after: null,
@@ -219,9 +219,9 @@ var vm = new Vue({
         }
 
         if (!_.isEmpty(this.filteredResults)) {
-          if (trade.result > 0 && !this.filteredResults.includes('Win')) return false;
-          if (trade.result == 0 && !this.filteredResults.includes('Break even')) return false;
-          if (trade.result < 0 && !this.filteredResults.includes('Loss')) return false;
+          if (trade.r > 0 && !this.filteredResults.includes('Win')) return false;
+          if (trade.r == 0 && !this.filteredResults.includes('Break even')) return false;
+          if (trade.r < 0 && !this.filteredResults.includes('Loss')) return false;
         }
 
         let tradeDate = moment(trade.date);
@@ -277,10 +277,10 @@ var vm = new Vue({
         result.push({
           name: prop,
           total: grouped[prop].length,
-          win: grouped[prop].filter((trade) => trade.result > 0).length,
-          be: grouped[prop].filter((trade) => trade.result == 0).length,
-          loss: grouped[prop].filter((trade) => trade.result < 0).length,
-          r: _.round(grouped[prop].reduce((total, trade) => total + parseFloat(trade.result / trade.stop), 0), 2)
+          win: grouped[prop].filter((trade) => trade.r > 0).length,
+          be: grouped[prop].filter((trade) => trade.r == 0).length,
+          loss: grouped[prop].filter((trade) => trade.r < 0).length,
+          r: _.round(grouped[prop].reduce((total, trade) => total + trade.r, 0), 2)
         });
       }
 
@@ -297,10 +297,10 @@ var vm = new Vue({
         result.push({
           name: prop,
           total: grouped[prop].length,
-          win: grouped[prop].filter((trade) => trade.result > 0).length,
-          be: grouped[prop].filter((trade) => trade.result == 0).length,
-          loss: grouped[prop].filter((trade) => trade.result < 0).length,
-          r: _.round(grouped[prop].reduce((total, trade) => total + parseFloat(trade.result / trade.stop), 0), 2)
+          win: grouped[prop].filter((trade) => trade.r > 0).length,
+          be: grouped[prop].filter((trade) => trade.r == 0).length,
+          loss: grouped[prop].filter((trade) => trade.r < 0).length,
+          r: _.round(grouped[prop].reduce((total, trade) => total + trade.r, 0), 2)
         });
       }
 
@@ -321,11 +321,11 @@ var vm = new Vue({
     },
 
     win: function () {
-      return this.list.filter((trade) => trade.result >= 0).length;
+      return this.list.filter((trade) => trade.r >= 0).length;
     },
 
     r: function() {
-      return _.round(this.list.reduce((total, trade) => total + parseFloat(trade.result / trade.stop), 0), 2)
+      return _.round(this.list.reduce((total, trade) => total + trade.r, 0), 2)
     },
 
     activeFilters: function() {
@@ -355,12 +355,11 @@ var vm = new Vue({
       }
 
       const labels = this.list.map((trade) => trade.date).reverse();
-      const dataset = [];
+      const dataset = [0];
 
       let previousR = 0;
       this.list.slice().reverse().forEach((trade) => {
-        const r = trade.result / trade.stop;
-        const sum = _.round(previousR + r, 2);
+        const sum = _.round(previousR + trade.r, 2);
         dataset.push(sum);
         previousR = sum;
       });
@@ -384,6 +383,11 @@ var vm = new Vue({
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          elements: {
+            line: {
+              tension: 0.2
+            }
+          },
           scales: {
             xAxes: [{
               display: false
@@ -456,9 +460,42 @@ var vm = new Vue({
         return;
       }
 
-      if (_.isEmpty(this.result) || !$.isNumeric(this.result)) {
-        alert("Must enter a valid result");
+      if (_.isEmpty(this.result)) {
+        alert("Must enter a take profit");
         return;
+      }
+
+      let percentage = 100;
+      for (let i = 0; i < this.result.length; i++) {
+        if (this.result[i].pips == null || !$.isNumeric(this.result[i].pips)) {
+          alert("Must enter a valid TP pip value");
+          return;
+        }
+
+        if (this.result[i].closed == null || !$.isNumeric(this.result[i].closed)) {
+          alert("Must enter a valid TP closed % value");
+          return;
+        }
+
+        percentage -= this.result[i].closed;
+      }
+
+      if (percentage != 0) {
+        alert("Closed TP % must equal 100%.");
+        return;
+      }
+
+      let tpResult = [];
+      for (let i = 0; i < this.result.length; i++) {
+        const tp = this.result[i];
+        const closed = tp.closed / 100;
+        const pips = tp.pips;
+        const r = (pips / this.stop) * closed;
+        tpResult.push({
+          closed: closed,
+          pips: pips,
+          r: r
+        });
       }
 
       this.trades.push({
@@ -472,7 +509,9 @@ var vm = new Vue({
         entry: this.entry,
         stop: this.stop,
         profit: this.profit,
-        result: this.result,
+        result: tpResult,
+        r: this.rResult(tpResult),
+        pips: this.pipResult(tpResult),
         notes: this.notes,
         before: this.before,
         after: this.after,
@@ -485,7 +524,7 @@ var vm = new Vue({
       this.entry = null;
       this.stop = null;
       this.profit = null;
-      this.result = null;
+      this.result = [{pips: null, closed: null}];
       this.notes = null;
       this.before = null;
       this.after = null;
@@ -528,9 +567,20 @@ var vm = new Vue({
     editTrade: function(trade) {
       if (trade.editing) {
         trade.editing = !trade.editing;
+        trade.result = trade.result.map((tp) => {
+          tp.closed = tp.closed / 100;
+          tp.r = (tp.pips / trade.stop) * tp.closed;
+          return tp;
+        });
+        trade.r = this.rResult(trade.result);
+        trade.pips = this.pipResult(trade.result);
         localStorage.setItem("trades", JSON.stringify(this.trades));
       } else {
         trade.editing = !trade.editing;
+        trade.result = trade.result.map((tp) => {
+          tp.closed = tp.closed * 100;
+          return tp;
+        });
       }
       
       this.setupChart();
@@ -618,10 +668,10 @@ var vm = new Vue({
         return {
           name: prop,
           total: this.list.filter((trade) => trade[property] == prop).length,
-          win: this.list.filter((trade) => trade[property] == prop && trade.result > 0).length,
-          be: this.list.filter((trade) => trade[property] == prop && trade.result == 0).length,
-          loss: this.list.filter((trade) => trade[property] == prop && trade.result < 0).length,
-          r: _.round(this.list.filter((trade) => trade[property] == prop).reduce((total, trade) => total + parseFloat(trade.result / trade.stop), 0), 2)
+          win: this.list.filter((trade) => trade[property] == prop && trade.r > 0).length,
+          be: this.list.filter((trade) => trade[property] == prop && trade.r == 0).length,
+          loss: this.list.filter((trade) => trade[property] == prop && trade.r < 0).length,
+          r: _.round(this.list.filter((trade) => trade[property] == prop).reduce((total, trade) => total + trade.r, 0), 2)
         };
       }).filter((row) => {
         if (noZeros) {
@@ -635,6 +685,14 @@ var vm = new Vue({
       if (a.r < b.r) return 1;
       if (a.r > b.r) return -1;
       return 0;
+    },
+
+    pipResult: function(tps) {
+      return tps.map((tp) => tp.pips);
+    },
+
+    rResult: function (tps) {
+      return _.round(tps.reduce((total, tp) => total + parseFloat(tp.r), 0), 2);
     },
 
     percent: function(num, tot) {
@@ -660,6 +718,7 @@ var vm = new Vue({
       }
 
       // Execute migrations here
+      this.multipleTakeProfitMigration();
 
       localStorage.setItem("version", version);
     },
@@ -701,6 +760,27 @@ var vm = new Vue({
       element.click();
     
       document.body.removeChild(element);
-    }
+    },
+
+    multipleTakeProfitMigration() {
+      let trades = JSON.parse(localStorage.getItem("trades"));
+      if (trades.length > 0 && Array.isArray(trades[0].result)) {
+        return;
+      }
+
+      trades = trades.map((trade) => {
+        const tempTakeProfit = trade.result;
+        trade.result = [{
+          closed: 100,
+          pips: tempTakeProfit,
+          r: _.round(tempTakeProfit / trade.stop, 2)
+        }];
+        trade.r = this.rResult(trade.result);
+        trade.pips = this.pipResult(trade.result);
+        
+        return trade;
+      });
+      localStorage.setItem('trades', JSON.stringify(trades));
+    },
   }
 });

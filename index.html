@@ -316,21 +316,7 @@
 						</select>
 					</div>
 				</div>
-				<div class="col-xl-3">
-					<div class="row" style="margin-bottom: 1em;">
-						<div class="col-xl-4">
-							<label>Stop loss (pips)</label>
-							<input type="number" v-model="stop" class="form-control" placeholder="Pips.." />
-						</div>
-						<div class="col-xl-4">
-							<label>Take Profit (pips)</label>
-							<input type="number" v-model="profit" class="form-control" placeholder="Pips.." />
-						</div>
-						<div class="col-xl-4">
-							<label>Result (pips)</label>
-							<input type="number" v-model="result" class="form-control" placeholder="Pips.." />
-						</div>
-					</div>
+				<div class="col-xl-4">
 					<div class="row">
 						<div class="col-xl-6">
 							<div class="form-group">
@@ -345,11 +331,43 @@
 							</div>
 						</div>
 					</div>
+					<div class="row" style="margin-bottom: 1em;">
+						<div class="col-xl-3">
+							<label>Stop loss</label>
+							<input type="number" v-model="stop" class="form-control" placeholder="Pips.." />
+						</div>
+						<div class="col-xl-3">
+							<label>Target</label>
+							<input type="number" v-model="profit" class="form-control" placeholder="Pips.." />
+						</div>
+						<div class="col-xl-6">
+							<div class="row" style="margin-bottom: .5rem;">
+								<div class="col-xl-5">TP Pips</div>
+								<div class="col-xl-5">TP % closed</div>
+							</div>
+							<div v-for="(tp, index) in result" class="row mb-2">
+								<div class="col-xl-5 pr-0">
+									<input type="number" v-model="tp.pips" class="form-control" v-bind:placeholder="'TP' + (index + 1) + ' pips'" :key="index" />
+								</div>
+								<div class="col-xl-5 pl-1">
+									<input type="number" v-model="tp.closed" class="form-control" v-bind:placeholder="'TP' + (index + 1) + ' % closed'" :key="index" />
+								</div>
+								<div class="col-xl-2 pl-0 pr-0">
+									<button v-on:click="result.push({pips: null, closed: null})" type="button" class="btn btn-xs btn-outline-primary display-inline-block">+</button>
+									<button v-if="index > 0" v-on:click="result.splice(index)" type="button" class="btn btn-xs btn-outline-danger display-inline-block">-</button>
+								</div>
+							</div>
+						</div>
+					</div>
 				</div>
-				<div class="col-xl-2">
-					<div class="form-group">
-						<label>Notes</label>
-						<textarea v-model="notes" class="form-control" placeholder="Notes..."></textarea>
+				<div class="col-xl-1">
+					<div class="row">
+						<div class="col-xl-12">
+							<div class="form-group">
+								<label>Notes</label>
+								<textarea v-model="notes" class="form-control" placeholder="Notes..." rows="3"></textarea>
+							</div>
+						</div>
 					</div>
 				</div>
 				<div class="col-xl-1">
@@ -450,7 +468,7 @@
 							<th>Setup</th>
 							<th>Entry price</th>
 							<th>Stop loss</th>
-							<th>Take profit</th>
+							<th>Target</th>
 							<th>Result</th>
 							<th>Notes</th>
 							<th>Before</th>
@@ -533,23 +551,39 @@
 								</td>
 								<td width="8%">
 									<template v-if="trade.editing">
-										<input v-model="trade.result" class="form-control form-control-sm" />
+										<div v-for="(tp, index) in trade.result" class="row mb-2">
+											<div class="col-xl-5 pr-0">
+												<input type="number" v-model="tp.pips" class="form-control" v-bind:placeholder="'TP' + (index + 1) + ' pips'" :key="index" />
+											</div>
+											<div class="col-xl-5 pl-1">
+												<input type="number" v-model="tp.closed" class="form-control" v-bind:placeholder="'TP' + (index + 1) + ' % closed'" :key="index" />
+											</div>
+											<div class="col-xl-2 pl-0 pr-0">
+												<button v-on:click="trade.result.push({pips: null, closed: null})" type="button" class="btn btn-xs btn-outline-primary display-inline-block">+</button>
+												<button v-if="index > 0" v-on:click="trade.result.splice(index)" type="button" class="btn btn-xs btn-outline-danger display-inline-block">-</button>
+											</div>
+										</div>
 									</template>
 									<template v-else>
-										<template v-if="trade.result > 0">
-											<span class="text-success">{{ trade.result }} pips</span>
-											<span class="text-success float-right">{{_.round(trade.result / trade.stop, 2) }}R</span>
-										</template>
-
-										<template v-else-if="trade.result == 0">
-											<span class="text-warning">{{ trade.result }} pips</span>
-											<span class="text-warning float-right">{{ _.round(trade.result / trade.stop, 2) }}R</span>
-										</template>
-
-										<template v-else>
-											<span class="text-danger">{{ trade.result }} pips</span>
-											<span class="text-danger float-right">{{ _.round(trade.result / trade.stop, 2) }}R</span>
-										</template>
+										<div v-bind:class="{'text-success': trade.r > 0, 'text-warning': trade.r == 0, 'text-danger': trade.r < 0}">
+											<div class="d-inline-block">
+												<template v-if="trade.result.length == 1">
+													<span>
+														{{ trade.pips[0] }} pips
+													</span>
+												</template>
+												<template v-else>
+													<span 
+														v-for="result in trade.result"
+														v-bind:class="{'text-success': result.pips > 0, 'text-warning': result.pips == 0, 'text-danger': result.pips < 0}"
+														class="d-block mb-1"
+														style="font-size: 0.6em;">
+														{{ result.pips }} pips &raquo; {{ result.closed * 100 }}%
+													</span>
+												</template>
+											</div>
+											<div class="d-inline-block float-right">{{ trade.r }}R</div>
+										</div>
 									</template>
 								</td>
 								<td width="6%" class="notes-container">
