@@ -369,6 +369,7 @@ var vm = new Vue({
       }
 
       const labels = this.list.map((trade) => trade.date).reverse();
+      labels.unshift('Start');
       const dataset = [0];
 
       let previousR = 0;
