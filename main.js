@@ -172,15 +172,29 @@ var vm = new Vue({
           let result = reader.result;
           let json = JSON.parse(result);
 
+          if (json.hasOwnProperty('customPairs') && json.hasOwnProperty('disabledPairs') &&
+              json.hasOwnProperty('customSetups') && json.hasOwnProperty('disabledSetups')) {
+            localStorage.setItem('custom-pairs', JSON.stringify(json.customPairs));
+            localStorage.setItem('disabled-pairs', JSON.stringify(json.disabledPairs));
+            localStorage.setItem('custom-setups', JSON.stringify(json.customSetups));
+            localStorage.setItem('disabled-setups', JSON.stringify(json.disabledSetups));
+
+            Vue.set(vm, 'customPairs', json.customPairs);
+            Vue.set(vm, 'disabledPairs', json.disabledPairs);
+            Vue.set(vm, 'customSetups', json.customSetups);
+            Vue.set(vm, 'disabledSetups', json.disabledSetups);
+          }
+
           if (json.hasOwnProperty('trades') && json.hasOwnProperty('groups')) {
             localStorage.setItem('trades', JSON.stringify(json.trades));
             localStorage.setItem('groups', JSON.stringify(json.groups));
 
             Vue.set(vm, 'trades', json.trades);
             Vue.set(vm, 'groups', json.groups);
-            alert('Successfully imported your data.');
-            $(`#settings-modal`).modal('hide');
           }
+
+          alert('Successfully imported your data.');
+          location.reload();
         }
         reader.readAsText(this.files[0]); 
       }); 
@@ -734,7 +748,11 @@ var vm = new Vue({
     backup: function() {
       this.download('positions.json', JSON.stringify({
         'trades': this.trades,
-        'groups': this.groups
+        'groups': this.groups,
+        'customPairs': this.customPairs,
+        'disabledPairs': this.disabledPairs,
+        'customSetups': this.customSetups,
+        'disabledSetups': this.disabledSetups
       }));
     },
 
