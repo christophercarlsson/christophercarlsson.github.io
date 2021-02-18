@@ -272,100 +272,139 @@
 		<template v-if="group != null">
 			<h3 style="margin-top: 50px;">Trades</h3>
 			<div class="row">
-				<div class="col-xl-2">
-					<div class="form-group">
-						<label>Date</label>
-						<input v-model="date" type="datetime-local" class="form-control" />
+				<div class="col-xl-4">
+					<div class="row">
+						<div class="col-xl-12">
+							<div class="row">
+								<div class="col-xl-4">
+									<div class="form-group">
+										<label>Date</label>
+										<input v-model="date" type="datetime-local" class="form-control" />
+									</div>
+								</div>
+								<div class="col-xl-4">
+									<div class="form-group">
+										<label>Pair</label>
+										<select v-model="pair" class="form-control">
+											<option value="null" disabled>Choose...</option>
+											<option v-for="pair in enabledPairs">{{ pair }}</option>
+										</select>
+									</div>
+								</div>
+								<div class="col-xl-4">
+									<div class="form-group">
+										<label>Entry</label>
+										<input type="number" v-model="entry" class="form-control" placeholder="1.000" />
+									</div>
+								</div>
+							</div>
+						</div>
 					</div>
-					<div class="form-group">
-						<label>Direction</label>
-						<select v-model="direction" class="form-control">
-							<option value="null" disabled>Choose...</option>
-							<option v-for="direction in directions">{{ direction }}</option>
-						</select>
+		
+					<div class="row">
+						<div class="col-xl-12">
+							<div class="row">
+								<div class="col-xl-4">
+									<div class="form-group">
+										<label>Direction</label>
+										<select v-model="direction" class="form-control">
+											<option value="null" disabled>Choose...</option>
+											<option v-for="direction in directions">{{ direction }}</option>
+										</select>
+									</div>
+								</div>
+								<div class="col-xl-4">
+									<div class="form-group">
+										<label>Type</label>
+										<select v-model="type" class="form-control">
+											<option value="null" disabled>Choose...</option>
+											<option v-for="type in types">{{ type }}</option>
+										</select>
+									</div>
+								</div>
+								<div class="col-xl-4">
+									<div class="form-group">
+										<label>Setup</label>
+										<select v-model="setup" class="form-control">
+											<option value="null" disabled>Choose...</option>
+											<option v-for="setup in enabledSetups">{{ setup }}</option>
+										</select>
+									</div>
+								</div>
+							</div>
+						</div>
 					</div>
 				</div>
-				
-				<div class="col-xl-2">
-					<div class="form-group">
-						<label>Pair</label>
-						<select v-model="pair" class="form-control">
-							<option value="null" disabled>Choose...</option>
-							<option v-for="pair in enabledPairs">{{ pair }}</option>
-						</select>
-					</div>
-					<div class="form-group">
-						<label>Type</label>
-						<select v-model="type" class="form-control">
-							<option value="null" disabled>Choose...</option>
-							<option v-for="type in types">{{ type }}</option>
-						</select>
-					</div>
-				</div>
-	
-				<div class="col-xl-2">
-					<div class="form-group">
-						<label>Entry</label>
-						<input type="number" v-model="entry" class="form-control" placeholder="1.000" />
-					</div>
-					<div class="form-group">
-						<label>Setup</label>
-						<select v-model="setup" class="form-control">
-							<option value="null" disabled>Choose...</option>
-							<option v-for="setup in enabledSetups">{{ setup }}</option>
-						</select>
+				<div class="col-xl-3">
+					<div class="row">
+						<div class="col-xl-4">
+							<div class="row">
+								<div class="col-xl-12">
+									<div class="form-group">
+										<label>Stop loss</label>
+										<input type="number" v-model="stop" class="form-control" placeholder="Pips.." />
+									</div>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-xl-12">
+									<div class="form-group">
+										<label>Target</label>
+										<input type="number" v-model="profit" class="form-control" placeholder="Pips.." />
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="col-xl-8">
+							<div class="form-group">
+								<div class="row" style="margin-bottom: .5rem;">
+									<div class="col-xl-5">TP Pips</div>
+									<div class="col-xl-5">TP % closed</div>
+								</div>
+								<div v-for="(tp, index) in result" class="row mb-2">
+									<div class="col-xl-5 pr-0">
+										<input type="number" v-model="tp.pips" class="form-control" v-bind:placeholder="'TP' + (index + 1) + ' pips'" :key="index" />
+									</div>
+									<div class="col-xl-5 pl-1">
+										<input type="number" v-model="tp.closed" class="form-control" v-bind:placeholder="'TP' + (index + 1) + ' % closed'" :key="index" />
+									</div>
+									<div class="col-xl-2 pl-0 pr-0">
+										<button v-on:click="result.push({pips: null, closed: null})" type="button" class="btn btn-xs btn-outline-primary display-inline-block">+</button>
+										<button v-if="index > 0" v-on:click="result.splice(index)" type="button" class="btn btn-xs btn-outline-danger display-inline-block">-</button>
+									</div>
+								</div>
+							</div>
+						</div>
 					</div>
 				</div>
 				<div class="col-xl-4">
 					<div class="row">
-						<div class="col-xl-6">
-							<div class="form-group">
-								<label>Screenshot before</label>
-								<input v-model="before" class="form-control" placeholder="https://www.tradingview.com/x/QG1DNPUc/" />
-							</div>
-						</div>
-						<div class="col-xl-6">
-							<div class="form-group">
-								<label>Screenshot after</label>
-								<input v-model="after" class="form-control" placeholder="https://www.tradingview.com/x/QG1DNPUc/" />
-							</div>
-						</div>
-					</div>
-					<div class="row" style="margin-bottom: 1em;">
-						<div class="col-xl-3">
-							<label>Stop loss</label>
-							<input type="number" v-model="stop" class="form-control" placeholder="Pips.." />
-						</div>
-						<div class="col-xl-3">
-							<label>Target</label>
-							<input type="number" v-model="profit" class="form-control" placeholder="Pips.." />
-						</div>
-						<div class="col-xl-6">
-							<div class="row" style="margin-bottom: .5rem;">
-								<div class="col-xl-5">TP Pips</div>
-								<div class="col-xl-5">TP % closed</div>
-							</div>
-							<div v-for="(tp, index) in result" class="row mb-2">
-								<div class="col-xl-5 pr-0">
-									<input type="number" v-model="tp.pips" class="form-control" v-bind:placeholder="'TP' + (index + 1) + ' pips'" :key="index" />
+						<div class="col-xl-5">
+							<div class="row">
+								<div class="col-xl-12">
+									<div class="form-group">
+										<label>Before</label>
+										<input v-model="before" class="form-control" placeholder="https://www.tradingview.com/x/QG1DNPUc/" />
+									</div>
 								</div>
-								<div class="col-xl-5 pl-1">
-									<input type="number" v-model="tp.closed" class="form-control" v-bind:placeholder="'TP' + (index + 1) + ' % closed'" :key="index" />
-								</div>
-								<div class="col-xl-2 pl-0 pr-0">
-									<button v-on:click="result.push({pips: null, closed: null})" type="button" class="btn btn-xs btn-outline-primary display-inline-block">+</button>
-									<button v-if="index > 0" v-on:click="result.splice(index)" type="button" class="btn btn-xs btn-outline-danger display-inline-block">-</button>
+							</div>
+							<div class="row">
+								<div class="col-xl-12">
+									<div class="form-group">
+										<label>After</label>
+										<input v-model="after" class="form-control" placeholder="https://www.tradingview.com/x/QG1DNPUc/" />
+									</div>
 								</div>
 							</div>
 						</div>
-					</div>
-				</div>
-				<div class="col-xl-1">
-					<div class="row">
-						<div class="col-xl-12">
-							<div class="form-group">
-								<label>Notes</label>
-								<textarea v-model="notes" class="form-control" placeholder="Notes..." rows="3"></textarea>
+						<div class="col-xl-7">
+							<div class="row">
+								<div class="col-xl-12">
+									<div class="form-group">
+										<label>Notes</label>
+										<textarea v-model="notes" class="form-control" placeholder="Notes..." rows="2"></textarea>
+									</div>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -374,6 +413,7 @@
 					<button v-on:click="addTrade" type="button" class="btn btn-outline-success" style="margin-top: 32px;">Add trade</button>
 				</div>
 			</div>
+
 
 			<!-- FILTER -->
 			<div class="row" style="margin-top: 10px">
