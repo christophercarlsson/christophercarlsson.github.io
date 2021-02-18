@@ -401,6 +401,14 @@
 							<div class="row">
 								<div class="col-xl-12">
 									<div class="form-group">
+										<label>Tags</label>
+										<vueselect v-model="tradeTags" tag-placeholder="Add this as new tag" placeholder="Search or add a tag" label="name" track-by="code" :options="tags" :multiple="true" :taggable="true" @tag="addTag"></vueselect>
+									</div>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-xl-12">
+									<div class="form-group">
 										<label>Notes</label>
 										<textarea v-model="notes" class="form-control" placeholder="Notes..." rows="2"></textarea>
 									</div>
@@ -476,6 +484,10 @@
 									<label>Result</label>
 									<vueselect v-model="filteredResults" :options="resultOptions" :multiple="true" placeholder="Select"></vueselect>
 								</div>
+								<div class="form-group">
+									<label>Tags</label>
+									<vueselect v-model="filteredTags" :options="tags.map((tag) => tag.name)" :multiple="true" placeholder="Select"></vueselect>
+								</div>
 							</div>
 
 							<div class="col-xl-2">
@@ -513,6 +525,7 @@
 							<th>Notes</th>
 							<th>Before</th>
 							<th>After</th>
+							<th>Tags</th>
 							<th class="text-center">Edit</th>
 						</thead>
 						<tbody>
@@ -521,7 +534,7 @@
 								<td width="8%">{{ trade.pair }}</td>
 								<td width="6%">{{ trade.direction }}</td>
 								<td width="9%">{{ trade.type }}</td>
-								<td width="9%">{{ trade.setup }}</td>
+								<td width="8%">{{ trade.setup }}</td>
 								<td width="6%">{{ trade.entry }}</td>
 								<td width="6%">{{ trade.stop }} pips</td>
 								<td width="6%">{{ trade.profit }} pips</td>
@@ -554,6 +567,13 @@
 								</td>
 								<td width="6%">
 									<a v-if="trade.after" v-bind:href="trade.after" target="_blank">After</a>
+								</td>
+								<td width="4%">
+									<span 
+									v-for="tag in (trade.tags ?? [])"
+									class="d-block"
+									style="font-size: 0.6em;">
+									{{ tag.name }}</span>
 								</td>
 								<td width="8%" class="text-right">
 									<button v-on:click="editTrade(index, trade)" type="button" class="btn btn-sm btn-outline-primary">
@@ -754,6 +774,13 @@
 										<div class="form-group">
 											<label>Screenshot after</label>
 											<input v-model="currentEditTrade.after" class="form-control" placeholder="https://www.tradingview.com/x/QG1DNPUc/" />
+										</div>
+									</div>
+
+									<div class="col-xl-12">
+										<div class="form-group">
+											<label>Tags</label>
+											<vueselect v-model="currentEditTrade.tags" tag-placeholder="Add this as new tag" placeholder="Search or add a tag" label="name" track-by="code" :options="tags" :multiple="true" :taggable="true" @tag="addTag"></vueselect>
 										</div>
 									</div>
 								</div>

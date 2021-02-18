@@ -9,6 +9,7 @@ var vm = new Vue({
     groupName: null,
     groups: [],
     trades: [],
+    tags: [],
 
     chart: null,
     maxDrawDown: 0,
@@ -30,6 +31,7 @@ var vm = new Vue({
     filteredDays: [],
     filteredHours: [],
     filteredResults: [],
+    filteredTags: [],
     filteredStartDate: null,
     filteredEndDate: null,
 
@@ -49,6 +51,7 @@ var vm = new Vue({
     notes: null,
     before: null,
     after: null,
+    tradeTags: [],
 
     pairs: [
       "AUDCAD",
@@ -153,6 +156,10 @@ var vm = new Vue({
 
     if (localStorage.getItem("darkmode") != null) {
       this.darkmode = localStorage.getItem("darkmode") == 1;
+    }
+
+    if (localStorage.getItem("tags") != null) {
+      this.tags = JSON.parse(localStorage.getItem("tags"));
     }
 
     document.onkeypress = function (e) {
@@ -270,6 +277,16 @@ var vm = new Vue({
           return false;
         }
 
+        if (!_.isEmpty(this.filteredTags)) {
+          return this.filteredTags.filter((tag) => {
+            let tradeTags = [];
+            if (trade.tags) {
+              tradeTags.push(...trade.tags.map((tag) => tag.name));
+            }
+            return tradeTags.includes(tag)
+          }).length > 0;
+        }
+
         return true;
       }).sort((a, b) => {
         if (a.date < b.date) return 1;
@@ -334,6 +351,26 @@ var vm = new Vue({
       return result.sort((a, b) => this.sort(a, b));
     },
 
+    bestDay: function() {
+      let grouped = _.groupBy(this.list, (trade) => {
+        return moment(trade.date).format('dddd');
+      });
+
+      var result = [];
+      for (var prop in grouped) {
+        result.push({
+          name: prop,
+          total: grouped[prop].length,
+          win: grouped[prop].filter((trade) => trade.r > 0).length,
+          be: grouped[prop].filter((trade) => trade.r == 0).length,
+          loss: grouped[prop].filter((trade) => trade.r < 0).length,
+          r: _.round(grouped[prop].reduce((total, trade) => total + trade.r, 0), 2)
+        });
+      }
+
+      return result.sort((a, b) => this.sort(a, b));
+    },
+
     generalStats: function() {
       return [
         {
@@ -356,7 +393,7 @@ var vm = new Vue({
     },
 
     activeFilters: function() {
-      let filters = [...this.filteredPairs, ...this.filteredDirections, ...this.filteredTypes, ...this.filteredSetups, ...this.filteredDays, ...this.filteredHours, ...this.filteredResults];
+      let filters = [...this.filteredPairs, ...this.filteredDirections, ...this.filteredTypes, ...this.filteredSetups, ...this.filteredDays, ...this.filteredHours, ...this.filteredResults, ...this.filteredTags];
       if (this.filteredStartDate != null) {
         filters.push('Start Date');
       }
@@ -543,6 +580,7 @@ var vm = new Vue({
         notes: this.notes,
         before: this.before,
         after: this.after,
+        tags: this.tradeTags,
         editing: false
       });
 
@@ -556,6 +594,7 @@ var vm = new Vue({
       this.notes = null;
       this.before = null;
       this.after = null;
+      this.tradeTags = [];
       
       localStorage.setItem("trades", JSON.stringify(this.trades));
     },
@@ -599,7 +638,7 @@ var vm = new Vue({
         tp.closed = tp.closed * 100;
         return tp;
       }));
-      
+
       $(`#edit-modal`).modal('show');
     },
 
@@ -783,7 +822,7 @@ var vm = new Vue({
       document.body.removeChild(element);
     },
 
-    multipleTakeProfitMigration() {
+    multipleTakeProfitMigration: function() {
       let trades = JSON.parse(localStorage.getItem("trades"));
       if (trades.length > 0 && Array.isArray(trades[0].result)) {
         return;
@@ -802,6 +841,16 @@ var vm = new Vue({
         return trade;
       });
       localStorage.setItem('trades', JSON.stringify(trades));
+    },
+
+    addTag: function(newTag) {
+      const tag = {
+        name: newTag,
+        code: newTag.substring(0, 2) + Math.floor((Math.random() * 10000000))
+      }
+      this.tradeTags.push(tag)
+      this.tags.push(tag)
+      localStorage.setItem('tags', JSON.stringify(this.tags));
     },
   }
 });
