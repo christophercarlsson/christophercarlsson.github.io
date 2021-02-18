@@ -19,6 +19,7 @@ var vm = new Vue({
     risk: null,
     money: null,
     tradeNotes: null,
+    currentEditTrade: null,
     newPair: null,
     newSetup: null,
 
@@ -164,6 +165,18 @@ var vm = new Vue({
 
       $(document).find('.cpop').popover({
         trigger: 'hover'
+      });
+
+      $('#edit-modal').on('hidden.bs.modal', function (e) {
+        vm.currentEditTrade.result = vm.currentEditTrade.result.map((tp) => {
+          tp.closed = tp.closed / 100;
+          tp.r = (tp.pips / vm.currentEditTrade.stop) * tp.closed;
+          return tp;
+        });
+        vm.currentEditTrade.r = vm.rResult(vm.currentEditTrade.result);
+        vm.currentEditTrade.pips = vm.pipResult(vm.currentEditTrade.result);
+        localStorage.setItem("trades", JSON.stringify(vm.trades));
+        vm.setupChart();
       });
 
       document.getElementById('restoreBackup').addEventListener('change', function() { 
@@ -579,26 +592,15 @@ var vm = new Vue({
       }
     },
 
-    editTrade: function(trade) {
-      if (trade.editing) {
-        trade.editing = !trade.editing;
-        trade.result = trade.result.map((tp) => {
-          tp.closed = tp.closed / 100;
-          tp.r = (tp.pips / trade.stop) * tp.closed;
-          return tp;
-        });
-        trade.r = this.rResult(trade.result);
-        trade.pips = this.pipResult(trade.result);
-        localStorage.setItem("trades", JSON.stringify(this.trades));
-      } else {
-        trade.editing = !trade.editing;
-        trade.result = trade.result.map((tp) => {
-          tp.closed = tp.closed * 100;
-          return tp;
-        });
-      }
+    editTrade: function(index, trade) {
+      Vue.set(vm, 'currentEditTrade', trade);
+
+      Vue.set(vm.currentEditTrade, 'result', this.currentEditTrade.result.map((tp) => {
+        tp.closed = tp.closed * 100;
+        return tp;
+      }));
       
-      this.setupChart();
+      $(`#edit-modal`).modal('show');
     },
 
     showNotes: function(notes) {

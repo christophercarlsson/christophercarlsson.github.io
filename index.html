@@ -476,146 +476,50 @@
 							<th class="text-center">Edit</th>
 						</thead>
 						<tbody>
-							<tr v-for="trade in list" :key="trade.id">
-								<td width="11%">
-									<template v-if="trade.editing">
-										<input v-model="trade.date" type="datetime-local" class="form-control form-control-sm" />
-									</template>
-									<template v-else>
-										{{ trade.date }}
-									</template>
-								</td>
+							<tr v-for="(trade, index) in list" :key="trade.id">
+								<td width="11%">{{ trade.date }}</td>
+								<td width="8%">{{ trade.pair }}</td>
+								<td width="6%">{{ trade.direction }}</td>
+								<td width="9%">{{ trade.type }}</td>
+								<td width="9%">{{ trade.setup }}</td>
+								<td width="6%">{{ trade.entry }}</td>
+								<td width="6%">{{ trade.stop }} pips</td>
+								<td width="6%">{{ trade.profit }} pips</td>
 								<td width="8%">
-									<template v-if="trade.editing">
-										<select v-model="trade.pair" class="form-control form-control-sm">
-											<option v-for="pair in pairs">{{ pair }}</option>
-										</select>
-									</template>
-									<template v-else>
-										{{ trade.pair }}
-									</template>
-								</td>
-								<td width="6%">
-									<template v-if="trade.editing">
-										<select v-model="trade.direction" class="form-control form-control-sm">
-											<option v-for="direction in directions">{{ direction }}</option>
-										</select>
-									</template>
-									<template v-else>
-										{{ trade.direction }}
-									</template>
-								</td>
-								<td width="9%">
-									<template v-if="trade.editing">
-										<select v-model="trade.type" class="form-control form-control-sm">
-											<option v-for="type in types">{{ type }}</option>
-										</select>
-									</template>
-									<template v-else>
-										{{ trade.type }}
-									</template>
-								</td>
-								<td width="9%">
-									<template v-if="trade.editing">
-										<select v-model="trade.setup" class="form-control form-control-sm">
-											<option v-for="setup in setups">{{ setup }}</option>
-										</select>
-									</template>
-									<template v-else>
-										{{ trade.setup }}
-									</template>
-								</td>
-								<td width="6%">
-									<template v-if="trade.editing">
-										<input v-model="trade.entry" class="form-control form-control-sm" />
-									</template>
-									<template v-else>
-										{{ trade.entry }}
-									</template>
-								</td>
-								<td width="6%">
-									<template v-if="trade.editing">
-										<input v-model="trade.stop" class="form-control form-control-sm" />
-									</template>
-									<template v-else>
-										{{ trade.stop }} pips
-									</template>
-								</td>
-								<td width="6%">
-									<template v-if="trade.editing">
-										<input v-model="trade.profit" class="form-control form-control-sm" />
-									</template>
-									<template v-else>
-										{{ trade.profit }} pips
-									</template>
-								</td>
-								<td width="8%">
-									<template v-if="trade.editing">
-										<div v-for="(tp, index) in trade.result" class="row mb-2">
-											<div class="col-xl-5 pr-0">
-												<input type="number" v-model="tp.pips" class="form-control" v-bind:placeholder="'TP' + (index + 1) + ' pips'" :key="index" />
-											</div>
-											<div class="col-xl-5 pl-1">
-												<input type="number" v-model="tp.closed" class="form-control" v-bind:placeholder="'TP' + (index + 1) + ' % closed'" :key="index" />
-											</div>
-											<div class="col-xl-2 pl-0 pr-0">
-												<button v-on:click="trade.result.push({pips: null, closed: null})" type="button" class="btn btn-xs btn-outline-primary display-inline-block">+</button>
-												<button v-if="index > 0" v-on:click="trade.result.splice(index)" type="button" class="btn btn-xs btn-outline-danger display-inline-block">-</button>
-											</div>
+									<div v-bind:class="{'text-success': trade.r > 0, 'text-warning': trade.r == 0, 'text-danger': trade.r < 0}">
+										<div class="d-inline-block">
+											<template v-if="trade.result.length == 1">
+												<span>
+													{{ trade.pips[0] }} pips
+												</span>
+											</template>
+											<template v-else>
+												<span 
+													v-for="result in trade.result"
+													v-bind:class="{'text-success': result.pips > 0, 'text-warning': result.pips == 0, 'text-danger': result.pips < 0}"
+													class="d-block mb-1"
+													style="font-size: 0.6em;">
+													{{ result.pips }} pips &raquo; {{ result.closed * 100 }}%
+												</span>
+											</template>
 										</div>
-									</template>
-									<template v-else>
-										<div v-bind:class="{'text-success': trade.r > 0, 'text-warning': trade.r == 0, 'text-danger': trade.r < 0}">
-											<div class="d-inline-block">
-												<template v-if="trade.result.length == 1">
-													<span>
-														{{ trade.pips[0] }} pips
-													</span>
-												</template>
-												<template v-else>
-													<span 
-														v-for="result in trade.result"
-														v-bind:class="{'text-success': result.pips > 0, 'text-warning': result.pips == 0, 'text-danger': result.pips < 0}"
-														class="d-block mb-1"
-														style="font-size: 0.6em;">
-														{{ result.pips }} pips &raquo; {{ result.closed * 100 }}%
-													</span>
-												</template>
-											</div>
-											<div class="d-inline-block float-right">{{ trade.r }}R</div>
-										</div>
-									</template>
+										<div class="d-inline-block float-right">{{ trade.r }}R</div>
+									</div>
 								</td>
 								<td width="6%" class="notes-container">
-									<template v-if="trade.editing">
-										<textarea v-model="trade.notes" class="form-control form-control-sm"></textarea>
-									</template>
-									<template v-else-if="trade.notes">
-										<button v-on:click="showNotes(trade.notes)" type="button" class="btn btn-sm btn-link m-0 p-0">Notes</button>
-									</template>
+									<button v-if="trade.notes" v-on:click="showNotes(trade.notes)" type="button" class="btn btn-sm btn-link m-0 p-0">Notes</button>
 								</td>
 								<td width="6%">
-									<template v-if="trade.editing">
-										<input v-model="trade.before" class="form-control form-control-sm" />
-									</template>
-									<template v-else-if="trade.before">
-										<a v-bind:href="trade.before" target="_blank">Before</a>
-									</template>
+									<a v-if="trade.before" v-bind:href="trade.before" target="_blank">Before</a>
 								</td>
 								<td width="6%">
-									<template v-if="trade.editing">
-										<input v-model="trade.after" class="form-control form-control-sm" />
-									</template>
-									<template v-else-if="trade.after">
-										<a v-bind:href="trade.after" target="_blank">After</a>
-									</template>
+									<a v-if="trade.after" v-bind:href="trade.after" target="_blank">After</a>
 								</td>
 								<td width="8%" class="text-right">
-									<button v-on:click="editTrade(trade)" type="button" class="btn btn-sm btn-outline-primary">
-										<span v-if="trade.editing">Save</span>
-										<span v-if="!trade.editing">Edit</span>
+									<button v-on:click="editTrade(index, trade)" type="button" class="btn btn-sm btn-outline-primary">
+										Edit
 									</button>
-									<button v-on:click="deleteTrade(trade.id)" v-if="!trade.editing" type="button" class="btn btn-sm btn-outline-danger">Delete</button>
+									<button v-on:click="deleteTrade(trade.id)" type="button" class="btn btn-sm btn-outline-danger">Delete</button>
 								</td>
 							</tr>
 						</tbody>
@@ -722,6 +626,139 @@
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal" id="edit-modal" tabindex="-1">
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title">Edit</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<div v-if="currentEditTrade != null" class="modal-body">
+						<div class="row mb-2">
+							<div class="col-xl-4">
+								<div class="form-group">
+									<label>Date</label>
+									<input v-model="currentEditTrade.date" type="datetime-local" class="form-control" />
+								</div>
+							</div>
+
+							<div class="col-xl-4">
+								<div class="form-group">
+									<label>Pair</label>
+									<select v-model="currentEditTrade.pair" class="form-control">
+										<option value="null" disabled>Choose...</option>
+										<option v-for="pair in enabledPairs">{{ pair }}</option>
+									</select>
+								</div>
+							</div>
+
+							<div class="col-xl-4">
+								<div class="form-group">
+									<label>Entry</label>
+									<input type="number" v-model="currentEditTrade.entry" class="form-control" placeholder="1.000" />
+								</div>
+							</div>
+						</div>
+
+						<div class="row mb-2">
+							<div class="col-xl-4">
+								<div class="form-group">
+									<label>Direction</label>
+									<select v-model="currentEditTrade.direction" class="form-control">
+										<option value="null" disabled>Choose...</option>
+										<option v-for="direction in directions">{{ direction }}</option>
+									</select>
+								</div>
+							</div>
+
+							<div class="col-xl-4">
+								<div class="form-group">
+									<label>Type</label>
+									<select v-model="currentEditTrade.type" class="form-control">
+										<option value="null" disabled>Choose...</option>
+										<option v-for="type in types">{{ type }}</option>
+									</select>
+								</div>
+							</div>
+
+							<div class="col-xl-4">
+								<div class="form-group">
+									<label>Setup</label>
+									<select v-model="currentEditTrade.setup" class="form-control">
+										<option value="null" disabled>Choose...</option>
+										<option v-for="setup in enabledSetups">{{ setup }}</option>
+									</select>
+								</div>
+							</div>
+						</div>
+
+						<div class="row mb-2">
+							<div class="col-xl-6">
+								<div class="row">
+									<div class="col-xl-12">
+										<div class="form-group">
+											<label>Screenshot before</label>
+											<input v-model="currentEditTrade.before" class="form-control" placeholder="https://www.tradingview.com/x/QG1DNPUc/" />
+										</div>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-xl-12">
+										<div class="form-group">
+											<label>Screenshot after</label>
+											<input v-model="currentEditTrade.after" class="form-control" placeholder="https://www.tradingview.com/x/QG1DNPUc/" />
+										</div>
+									</div>
+								</div>
+							</div>
+							
+							<div class="col-xl-6">
+								<div class="form-group">
+									<label>Notes</label>
+									<textarea v-model="currentEditTrade.notes" class="form-control" placeholder="Notes..." rows="4"></textarea>
+								</div>
+							</div>
+						</div>
+
+						<div class="row mb-2">
+							<div class="col-xl-3">
+								<label>Stop loss</label>
+								<input type="number" v-model="currentEditTrade.stop" class="form-control" placeholder="Pips.." />
+							</div>
+							<div class="col-xl-3">
+								<label>Target</label>
+								<input type="number" v-model="currentEditTrade.profit" class="form-control" placeholder="Pips.." />
+							</div>
+							<div class="col-xl-6">
+								<div class="row" style="margin-bottom: .5rem;">
+									<div class="col-xl-5">TP Pips</div>
+									<div class="col-xl-5">TP % closed</div>
+								</div>
+								<div v-for="(tp, index) in currentEditTrade.result" class="row mb-2">
+									<div class="col-xl-5 pr-0">
+										<input type="number" v-model="tp.pips" class="form-control" v-bind:placeholder="'TP' + (index + 1) + ' pips'" :key="index" />
+									</div>
+									<div class="col-xl-5 pl-1">
+										<input type="number" v-model="tp.closed" class="form-control" v-bind:placeholder="'TP' + (index + 1) + ' % closed'" :key="index" />
+									</div>
+									<div class="col-xl-2 pl-0 pr-0">
+										<button v-on:click="currentEditTrade.result.push({pips: null, closed: null})" type="button" class="btn btn-xs btn-outline-primary display-inline-block">+</button>
+										<button v-if="index > 0" v-on:click="currentEditTrade.result.splice(index)" type="button" class="btn btn-xs btn-outline-danger display-inline-block">-</button>
+									</div>
+								</div>
+							</div>
+						</div>
+							
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Save</button>
 					</div>
 				</div>
 			</div>
