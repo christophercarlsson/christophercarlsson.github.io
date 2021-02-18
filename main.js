@@ -205,6 +205,10 @@ var vm = new Vue({
             Vue.set(vm, 'disabledSetups', json.disabledSetups);
           }
 
+          if (json.hasOwnProperty('tags')) {
+            localStorage.setItem('tags', JSON.stringify(json.tags));
+          }
+
           if (json.hasOwnProperty('trades') && json.hasOwnProperty('groups')) {
             localStorage.setItem('trades', JSON.stringify(json.trades));
             localStorage.setItem('groups', JSON.stringify(json.groups));
@@ -794,7 +798,8 @@ var vm = new Vue({
         'customPairs': this.customPairs,
         'disabledPairs': this.disabledPairs,
         'customSetups': this.customSetups,
-        'disabledSetups': this.disabledSetups
+        'disabledSetups': this.disabledSetups,
+        'tags': this.tags,
       }));
     },
 
