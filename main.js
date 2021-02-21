@@ -209,6 +209,10 @@ var vm = new Vue({
             localStorage.setItem('tags', JSON.stringify(json.tags));
           }
 
+          if (json.hasOwnProperty('version')) {
+            localStorage.setItem("version", json.version);
+          }
+
           if (json.hasOwnProperty('trades') && json.hasOwnProperty('groups')) {
             localStorage.setItem('trades', JSON.stringify(json.trades));
             localStorage.setItem('groups', JSON.stringify(json.groups));
@@ -800,6 +804,7 @@ var vm = new Vue({
         'customSetups': this.customSetups,
         'disabledSetups': this.disabledSetups,
         'tags': this.tags,
+        'version': version
       }));
     },
 
