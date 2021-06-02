@@ -110,6 +110,8 @@ var vm = new Vue({
     disabledSetups: [],
 
     darkmode: false,
+    reviewmode: false,
+    isReviewing: false,
   },
 
   watch: {
@@ -120,6 +122,10 @@ var vm = new Vue({
       });
     },
 
+    reviewmode: function (val) {
+      localStorage.setItem('reviewmode', val ? 1 : 0);
+    },
+
     list: function() {
       vm.setupChart();
     }
@@ -127,40 +133,7 @@ var vm = new Vue({
 
   created: function () {
     this.migrate();
-
-    if (localStorage.getItem("trades") != null) {
-      this.trades = JSON.parse(localStorage.getItem("trades"));
-    }
-
-    if (localStorage.getItem("groups") != null) {
-      this.groups = JSON.parse(localStorage.getItem("groups"));
-    }
-
-    if (localStorage.getItem("custom-pairs") != null) {
-      this.customPairs = JSON.parse(localStorage.getItem("custom-pairs"));
-      this.pairs.push(...this.customPairs);
-    }
-
-    if (localStorage.getItem("disabled-pairs") != null) {
-      this.disabledPairs = JSON.parse(localStorage.getItem("disabled-pairs"));
-    }
-
-    if (localStorage.getItem("custom-setups") != null) {
-      this.customSetups = JSON.parse(localStorage.getItem("custom-setups"));
-      this.setups.push(...this.customSetups);
-    }
-
-    if (localStorage.getItem("disabled-setups") != null) {
-      this.disabledSetups = JSON.parse(localStorage.getItem("disabled-setups"));
-    }
-
-    if (localStorage.getItem("darkmode") != null) {
-      this.darkmode = localStorage.getItem("darkmode") == 1;
-    }
-
-    if (localStorage.getItem("tags") != null) {
-      this.tags = JSON.parse(localStorage.getItem("tags"));
-    }
+    this.loadLocalStorageData();
 
     document.onkeypress = function (e) {
         e = e || window.event;
@@ -169,64 +142,12 @@ var vm = new Vue({
 
     $(document).ready(() => {
       vm.setupChart();
+      vm.setupEditModal();
+      vm.setupRestoration();
 
       $(document).find('.cpop').popover({
         trigger: 'hover'
       });
-
-      $('#edit-modal').on('hidden.bs.modal', function (e) {
-        vm.currentEditTrade.result = vm.currentEditTrade.result.map((tp) => {
-          tp.closed = tp.closed / 100;
-          tp.r = (tp.pips / vm.currentEditTrade.stop) * tp.closed;
-          return tp;
-        });
-        vm.currentEditTrade.r = vm.rResult(vm.currentEditTrade.result);
-        vm.currentEditTrade.pips = vm.pipResult(vm.currentEditTrade.result);
-        localStorage.setItem("trades", JSON.stringify(vm.trades));
-        vm.setupChart();
-      });
-
-      document.getElementById('restoreBackup').addEventListener('change', function() { 
-        let reader = new FileReader(); 
-        reader.onload = function() { 
-          let result = reader.result;
-          let json = JSON.parse(result);
-
-          if (json.hasOwnProperty('customPairs') && json.hasOwnProperty('disabledPairs') &&
-              json.hasOwnProperty('customSetups') && json.hasOwnProperty('disabledSetups')) {
-            localStorage.setItem('custom-pairs', JSON.stringify(json.customPairs));
-            localStorage.setItem('disabled-pairs', JSON.stringify(json.disabledPairs));
-            localStorage.setItem('custom-setups', JSON.stringify(json.customSetups));
-            localStorage.setItem('disabled-setups', JSON.stringify(json.disabledSetups));
-
-            Vue.set(vm, 'customPairs', json.customPairs);
-            Vue.set(vm, 'disabledPairs', json.disabledPairs);
-            Vue.set(vm, 'customSetups', json.customSetups);
-            Vue.set(vm, 'disabledSetups', json.disabledSetups);
-          }
-
-          if (json.hasOwnProperty('tags')) {
-            localStorage.setItem('tags', JSON.stringify(json.tags));
-          }
-
-          if (json.hasOwnProperty('version')) {
-            localStorage.setItem("version", json.version);
-          }
-
-          if (json.hasOwnProperty('trades') && json.hasOwnProperty('groups')) {
-            localStorage.setItem('trades', JSON.stringify(json.trades));
-            localStorage.setItem('groups', JSON.stringify(json.groups));
-
-            Vue.set(vm, 'trades', json.trades);
-            Vue.set(vm, 'groups', json.groups);
-          }
-
-          alert('Successfully imported your data.');
-          location.reload();
-        }
-        reader.readAsText(this.files[0]); 
-      }); 
-
     });
   },
 
@@ -488,11 +409,155 @@ var vm = new Vue({
       });
     },
 
+    loadLocalStorageData: function() {
+      if (localStorage.getItem("trades") != null) {
+        this.trades = JSON.parse(localStorage.getItem("trades"));
+      }
+  
+      if (localStorage.getItem("groups") != null) {
+        this.groups = JSON.parse(localStorage.getItem("groups"));
+      }
+  
+      if (localStorage.getItem("custom-pairs") != null) {
+        this.customPairs = JSON.parse(localStorage.getItem("custom-pairs"));
+        this.pairs.push(...this.customPairs);
+      }
+  
+      if (localStorage.getItem("disabled-pairs") != null) {
+        this.disabledPairs = JSON.parse(localStorage.getItem("disabled-pairs"));
+      }
+  
+      if (localStorage.getItem("custom-setups") != null) {
+        this.customSetups = JSON.parse(localStorage.getItem("custom-setups"));
+        this.setups.push(...this.customSetups);
+      }
+  
+      if (localStorage.getItem("disabled-setups") != null) {
+        this.disabledSetups = JSON.parse(localStorage.getItem("disabled-setups"));
+      }
+  
+      if (localStorage.getItem("darkmode") != null) {
+        this.darkmode = localStorage.getItem("darkmode") == 1;
+      }
+  
+      if (localStorage.getItem("reviewmode") != null) {
+        this.reviewmode = localStorage.getItem("reviewmode") == 1;
+      }
+  
+      if (localStorage.getItem("tags") != null) {
+        this.tags = JSON.parse(localStorage.getItem("tags"));
+      }
+    },
+
+    setupEditModal: function() {
+      $('#edit-modal').on('hidden.bs.modal', function (e) {
+        vm.currentEditTrade.result = vm.currentEditTrade.result.map((tp) => {
+          tp.closed = tp.closed / 100;
+          tp.r = (tp.pips / vm.currentEditTrade.stop) * tp.closed;
+          return tp;
+        });
+        vm.currentEditTrade.r = vm.rResult(vm.currentEditTrade.result);
+        vm.currentEditTrade.pips = vm.pipResult(vm.currentEditTrade.result);
+        localStorage.setItem("trades", JSON.stringify(vm.trades));
+        vm.setupChart();
+      });
+    },
+
+    setupRestoration: function() {
+      /**
+       * Responsible for restoring actual backups
+       */
+      document.getElementById('restoreBackup').addEventListener('change', function() { 
+        let reader = new FileReader(); 
+        reader.onload = function() { 
+          let result = reader.result;
+          let json = JSON.parse(result);
+
+          if (json.hasOwnProperty('customPairs') && json.hasOwnProperty('disabledPairs') &&
+              json.hasOwnProperty('customSetups') && json.hasOwnProperty('disabledSetups')) {
+            localStorage.setItem('custom-pairs', JSON.stringify(json.customPairs));
+            localStorage.setItem('disabled-pairs', JSON.stringify(json.disabledPairs));
+            localStorage.setItem('custom-setups', JSON.stringify(json.customSetups));
+            localStorage.setItem('disabled-setups', JSON.stringify(json.disabledSetups));
+
+            Vue.set(vm, 'customPairs', json.customPairs);
+            Vue.set(vm, 'disabledPairs', json.disabledPairs);
+            Vue.set(vm, 'customSetups', json.customSetups);
+            Vue.set(vm, 'disabledSetups', json.disabledSetups);
+          }
+
+          if (json.hasOwnProperty('tags')) {
+            localStorage.setItem('tags', JSON.stringify(json.tags));
+          }
+
+          if (json.hasOwnProperty('version')) {
+            localStorage.setItem("version", json.version);
+          }
+
+          if (json.hasOwnProperty('trades') && json.hasOwnProperty('groups')) {
+            localStorage.setItem('trades', JSON.stringify(json.trades));
+            localStorage.setItem('groups', JSON.stringify(json.groups));
+
+            Vue.set(vm, 'trades', json.trades);
+            Vue.set(vm, 'groups', json.groups);
+          }
+
+          alert('Successfully imported your data.');
+          location.reload();
+        }
+        reader.readAsText(this.files[0]); 
+      });
+
+      /**
+       * Responsible for importing trades for review
+       */
+      document.getElementById('reviewTrade').addEventListener('change', function() { 
+        let reader = new FileReader(); 
+        reader.onload = function() { 
+          let result = reader.result;
+          let json = JSON.parse(result);
+
+          if (json.hasOwnProperty('customPairs') && json.hasOwnProperty('disabledPairs') &&
+              json.hasOwnProperty('customSetups') && json.hasOwnProperty('disabledSetups')) {
+            Vue.set(vm, 'customPairs', json.customPairs);
+            Vue.set(vm, 'disabledPairs', json.disabledPairs);
+            Vue.set(vm, 'customSetups', json.customSetups);
+            Vue.set(vm, 'disabledSetups', json.disabledSetups);
+          }
+
+          if (json.hasOwnProperty('tags')) {
+            Vue.set(vm, 'tags', json.tags);
+          }
+
+          if (json.hasOwnProperty('trades') && json.hasOwnProperty('groups')) {
+            Vue.set(vm, 'trades', json.trades);
+            Vue.set(vm, 'groups', json.groups);
+          }
+
+          Vue.set(vm, 'isReviewing', true);
+          Vue.set(vm, 'group', null);
+          document.getElementById('reviewTrade').value = "";
+          alert('Successfully imported review data.');
+        }
+        reader.readAsText(this.files[0]); 
+      }); 
+    },
+
     openSettings: function() {
       $(`#settings-modal`).modal('show');
     },
 
+    exitReview: function() {
+      Vue.set(vm, 'isReviewing', false);
+      Vue.set(vm, 'group', null);
+      vm.loadLocalStorageData();
+    },
+
     addTrade: function() {
+      if (vm.isReviewing) {
+        return;
+      }
+
       if (_.isEmpty(this.date)) {
         alert("Must enter a date");
         return;
@@ -608,6 +673,10 @@ var vm = new Vue({
     },
 
     addGroup: function() {
+      if (vm.isReviewing) {
+        return;
+      }
+
       if (_.isEmpty(this.groupName)) {
         alert("Must enter a group name.");
         return;
@@ -625,6 +694,10 @@ var vm = new Vue({
     },
 
     deleteTrade: function(tradeId) {
+      if (vm.isReviewing) {
+        return;
+      }
+
       if (confirm('Do you really want to remove this trade?')) {
         this.trades = this.trades.filter((trade) => tradeId != trade.id);
         localStorage.setItem("trades", JSON.stringify(this.trades));
@@ -632,6 +705,10 @@ var vm = new Vue({
     },
 
     deleteGroup: function(groupName) {
+      if (vm.isReviewing) {
+        return;
+      }
+
       if (confirm('Do you really want to remove this session?')) {
         this.groups = this.groups.filter((group) => groupName != group);
         localStorage.setItem("groups", JSON.stringify(this.groups));
@@ -640,6 +717,10 @@ var vm = new Vue({
     },
 
     editTrade: function(index, trade) {
+      if (vm.isReviewing) {
+        return;
+      }
+
       Vue.set(vm, 'currentEditTrade', trade);
 
       Vue.set(vm.currentEditTrade, 'result', this.currentEditTrade.result.map((tp) => {
@@ -656,6 +737,10 @@ var vm = new Vue({
     },
 
     togglePair: function(pair) {
+      if (vm.isReviewing) {
+        return;
+      }
+
       const index = this.disabledPairs.indexOf(pair);
       if (index > -1) {
         this.disabledPairs.splice(index, 1);
@@ -667,6 +752,10 @@ var vm = new Vue({
     },
 
     toggleSetup: function(setup) {
+      if (vm.isReviewing) {
+        return;
+      }
+
       const index = this.disabledSetups.indexOf(setup);
       if (index > -1) {
         this.disabledSetups.splice(index, 1);
@@ -678,6 +767,10 @@ var vm = new Vue({
     },
 
     addPair: function() {
+      if (vm.isReviewing) {
+        return;
+      }
+
       if (_.isEmpty(this.newPair) || this.customPairs.includes(this.newPair)) {
         return;
       }
@@ -689,6 +782,10 @@ var vm = new Vue({
     },
 
     removePair: function(pair) {
+      if (vm.isReviewing) {
+        return;
+      }
+
       const customIndex = this.customPairs.indexOf(pair);
       if (customIndex > -1) {
         this.customPairs.splice(customIndex, 1);
@@ -703,6 +800,10 @@ var vm = new Vue({
     },
 
     addSetup: function() {
+      if (vm.isReviewing) {
+        return;
+      }
+
       if (_.isEmpty(this.newSetup) || this.customSetups.includes(this.newSetup)) {
         return;
       }
@@ -714,6 +815,10 @@ var vm = new Vue({
     },
 
     removeSetup: function(setup) {
+      if (vm.isReviewing) {
+        return;
+      }
+
       const customIndex = this.customSetups.indexOf(setup);
       if (customIndex > -1) {
         this.customSetups.splice(customIndex, 1);
@@ -812,6 +917,10 @@ var vm = new Vue({
       $('#restoreBackup').click();
     },
 
+    importReview: function() {
+      $('#reviewTrade').click();
+    },
+
     excel: function() {
       const headers = 'date;pair;direction;setup;type;entry;profit;stop;result;r;before;after;\r\n'
       const trades = headers + this.list.map((trade) => `${trade.date};${trade.pair};${trade.direction};${trade.setup};${trade.type};${trade.entry};${trade.profit};${trade.stop};${trade.result};${_.round(trade.result / trade.stop, 2)};${_.defaultTo(trade.before, '')};${_.defaultTo(trade.after, '')};\r\n`).join('');
@@ -854,6 +963,10 @@ var vm = new Vue({
     },
 
     addTag: function(newTag) {
+      if (vm.isReviewing) {
+        return;
+      }
+
       const tag = {
         name: newTag,
         code: newTag.substring(0, 2) + Math.floor((Math.random() * 10000000))

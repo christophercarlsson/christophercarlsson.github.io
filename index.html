@@ -32,13 +32,17 @@
 					</div>
 
 					<div class="col-xl-6" style="margin-top: 32px;">
-						<button v-on:click="addGroup" type="button" class="btn btn-outline-success">Add trade session</button>
-						<button v-if="group != null" v-on:click="deleteGroup(group)" type="button" class="btn btn-outline-danger">Remove current session</button>
+						<button v-bind:disabled="isReviewing" v-on:click="addGroup" type="button" class="btn btn-outline-success">Add trade session</button>
+						<button v-bind:disabled="isReviewing" v-if="group != null" v-on:click="deleteGroup(group)" type="button" class="btn btn-outline-danger">Remove current session</button>
 					</div>
 				</div>
 			</div>
 		</div>
+
+		<button v-if="isReviewing" v-on:click="exitReview" class="reviewClose btn btn-sm btn-warning">Close review</button>
+		<button v-if="reviewmode" v-on:click="importReview" class="review btn btn-sm btn-primary">Review trades</button>
 		<button v-on:click="openSettings" class="settings btn btn-sm btn-primary"><i class="fas fa-cogs"></i></button>
+		<input type="file" class="custom-file-input" style="display: none;" id="reviewTrade">
 		<!-- /SESSION -->
 
 		<!-- STATISTICS -->
@@ -418,7 +422,7 @@
 					</div>
 				</div>
 				<div class="col-xl-1">
-					<button v-on:click="addTrade" type="button" class="btn btn-outline-success" style="margin-top: 32px;">Add trade</button>
+					<button v-bind:disabled="isReviewing" v-on:click="addTrade" type="button" class="btn btn-outline-success" style="margin-top: 32px;">Add trade</button>
 				</div>
 			</div>
 
@@ -576,10 +580,10 @@
 									{{ tag.name }}</span>
 								</td>
 								<td width="8%" class="text-right">
-									<button v-on:click="editTrade(index, trade)" type="button" class="btn btn-sm btn-outline-primary">
+									<button v-bind:disabled="isReviewing" v-on:click="editTrade(index, trade)" type="button" class="btn btn-sm btn-outline-primary">
 										Edit
 									</button>
-									<button v-on:click="deleteTrade(trade.id)" type="button" class="btn btn-sm btn-outline-danger">Delete</button>
+									<button v-bind:disabled="isReviewing" v-on:click="deleteTrade(trade.id)" type="button" class="btn btn-sm btn-outline-danger">Delete</button>
 								</td>
 							</tr>
 						</tbody>
@@ -625,10 +629,15 @@
 						</div>
 
 						<div class="row mt-3">
+							<div class="col-xl-10"><h6>Enable review mode</h6></div>
+							<div class="col-xl-2 text-right"><input v-model="reviewmode" type="checkbox" class="form-check-input" /></div>
+						</div>
+
+						<div class="row mt-3">
 							<div class="col-xl-8"><h6>Backup</h6></div>
 							<div class="col-xl-4 text-right">
-								<button v-on:click="backup" class="btn btn-sm btn-primary">Backup</button>
-								<button v-on:click="restore" class="btn btn-sm btn-danger">Restore</button>
+								<button v-bind:disabled="isReviewing" v-on:click="backup" class="btn btn-sm btn-primary">Backup</button>
+								<button v-bind:disabled="isReviewing" v-on:click="restore" class="btn btn-sm btn-danger">Restore</button>
 								<input type="file" class="custom-file-input" style="display: none;" id="restoreBackup">
 							</div>
 						</div>
@@ -636,7 +645,7 @@
 						<div class="row mt-3">
 							<div class="col-xl-8"><h6>Excel export</h6></div>
 							<div class="col-xl-4 text-right">
-								<button v-on:click="excel" class="btn btn-sm btn-primary">Export</button>
+								<button v-bind:disabled="isReviewing" v-on:click="excel" class="btn btn-sm btn-primary">Export</button>
 							</div>
 						</div>
 
@@ -647,7 +656,7 @@
 							</div>
 							<div class="col-xl-9 text-right">
 								<input v-model="newPair" class="form-control form-control-sm d-inline-block" style="width: 30%;" type="text" placeholder="New pair..." />
-								<button v-on:click="addPair" class="btn btn-sm btn-success d-inline-block ml-2" style="width: 15%;">Add pair</button>
+								<button v-bind:disabled="isReviewing" v-on:click="addPair" class="btn btn-sm btn-success d-inline-block ml-2" style="width: 15%;">Add pair</button>
 							</div>
 						</div>
 						<div class="row mt-3">
@@ -669,7 +678,7 @@
 							</div>
 							<div class="col-xl-9 text-right">
 								<input v-model="newSetup" class="form-control form-control-sm d-inline-block" style="width: 30%;" type="text" placeholder="New setup..." />
-								<button v-on:click="addSetup" class="btn btn-sm btn-success d-inline-block ml-2" style="width: 15%;">Add setup</button>
+								<button v-bind:disabled="isReviewing" v-on:click="addSetup" class="btn btn-sm btn-success d-inline-block ml-2" style="width: 15%;">Add setup</button>
 							</div>
 						</div>
 						<div class="row mt-3">

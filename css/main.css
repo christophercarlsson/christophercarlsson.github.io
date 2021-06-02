@@ -39,6 +39,24 @@ body.dark-mode div.modal-content {
 	color: rgb(226, 226, 226);
 }
 
+.reviewClose {
+	position: absolute;
+	width: 120px;
+	height: 40px;
+	top: 15px;
+	right: 205px;
+	cursor: pointer;
+}
+
+.review {
+	position: absolute;
+	width: 120px;
+	height: 40px;
+	top: 15px;
+	right: 70px;
+	cursor: pointer;
+}
+
 .settings {
 	position: absolute;
 	width: 40px;
