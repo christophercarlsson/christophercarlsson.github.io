@@ -404,6 +404,13 @@ var vm = new Vue({
       app.auth().signInWithRedirect(facebookProvider);
     },
 
+    clearLoginData: function() {
+      Vue.set(vm, 'loggingIn', false);
+      localStorage.removeItem('redirectInProgress');
+      localStorage.removeItem('method');
+      localStorage.removeItem('userId');
+    },
+
     domReady: function() {
       document.onkeypress = function (e) {
         e = e || window.event;
