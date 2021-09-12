@@ -1,4 +1,4 @@
-const baseUrl = "http://us-central1-fxpositiontracker.cloudfunctions.net";
+const baseUrl = "https://us-central1-fxpositiontracker.cloudfunctions.net";
 class Repository {
   source = "local";
   userId = null;
