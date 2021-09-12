@@ -1,6 +1,29 @@
 let version = 5;
 let vueselect = Vue.component('vue-multiselect', window.VueMultiselect.default);
 let repository = new Repository();
+let app;
+let googleProvider;
+let facebookProvider;
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD_n2WC3PlAEoCXjm1hyjHirm2-Kfi3kro",
+  authDomain: "fxpositiontracker.firebaseapp.com",
+  projectId: "fxpositiontracker",
+  storageBucket: "fxpositiontracker.appspot.com",
+  messagingSenderId: "841937501586",
+  appId: "1:841937501586:web:7ac9894b07abc7682f954b"
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+  try {
+    app = firebase.initializeApp(firebaseConfig);
+    googleProvider = new firebase.auth.GoogleAuthProvider();
+    facebookProvider = new firebase.auth.FacebookAuthProvider();
+  } catch (e) {
+    console.log(e);
+  }
+});
+
 
 var vm = new Vue({
   el: ".container-fluid",
@@ -113,6 +136,7 @@ var vm = new Vue({
     darkmode: false,
     reviewmode: false,
     isReviewing: false,
+    loggingIn: false,
   },
 
   watch: {
@@ -132,23 +156,21 @@ var vm = new Vue({
   },
 
   created: function () {
+    this.domReady();
+
+    if (localStorage.getItem('method') == null) {
+      const location = window.location.href;
+      if(/github.io|localhost/.test(location)) {
+        $(`#login-modal`).modal('show');
+        return;
+      }
+      localStorage.setItem('method', 'local');
+    }
+
+    repository.setSource(localStorage.getItem('method'));
+    repository.setUserId(localStorage.getItem('userId'));
     this.migrate();
     this.loadStoredData();
-
-    document.onkeypress = function (e) {
-        e = e || window.event;
-        if (e.keyCode == 13) vm.addTrade();
-    };
-
-    $(document).ready(() => {
-      vm.setupChart();
-      vm.setupEditModal();
-      vm.setupRestoration();
-
-      $(document).find('.cpop').popover({
-        trigger: 'hover'
-      });
-    });
   },
 
   components: {
@@ -342,6 +364,138 @@ var vm = new Vue({
   },
 
   methods: {
+    useLocalStorage: function() {
+      localStorage.setItem('method', 'local');
+      this.migrate();
+      this.loadStoredData();
+      this.hideLoginModal();
+    },
+
+    loginWithGoogle: function() {
+      Vue.set(vm, 'loggingIn', true);
+
+      app.auth()
+      .signInWithPopup(googleProvider)
+      .then((result) => {
+        let user = result.user;
+        let uid = user.uid;
+        this.remoteLoginDone(uid);
+
+      }).catch((error) => {
+        console.log(error);
+        alert("Something went wrong when logging in, please try again.");
+        llocalStorage.removeItem('method');
+        localStorage.removeItem('userId');
+      });
+    },
+
+    loginWithFacebook: function() {
+      Vue.set(vm, 'loggingIn', true);
+
+      app.auth()
+      .signInWithPopup(facebookProvider)
+      .then((result) => {
+        let user = result.user;
+        let uid = user.uid;
+        this.remoteLoginDone(uid);
+
+      }).catch((error) => {
+        console.log(error);
+        alert("Something went wrong when logging in, please try again.");
+        localStorage.removeItem('method');
+        localStorage.removeItem('userId');
+      });
+    },
+
+    domReady: function() {
+      document.onkeypress = function (e) {
+        e = e || window.event;
+        if (e.keyCode == 13) vm.addTrade();
+      };
+
+      $(document).ready(() => {
+        vm.setupChart();
+        vm.setupEditModal();
+        vm.setupRestoration();
+
+        $(document).find('.cpop').popover({
+          trigger: 'hover'
+        });
+      });
+    },
+
+    remoteLoginDone: async function(uid) {
+      localStorage.setItem('method', 'remote');
+      localStorage.setItem('userId', uid);
+
+      repository.setSource('remote');
+      repository.setUserId(uid);
+
+      const data = await repository.read();
+
+      // If they already have data, dont overwrite it
+      if (data.trades.length != 0 || data.groups.length != 0) {
+        this.migrate();
+        this.loadStoredData();
+        this.hideLoginModal();
+        return;
+      }
+
+      let promises = [];
+      if (localStorage.getItem("trades") != null) {
+        promises.push(repository.writeTrades(JSON.parse(localStorage.getItem("trades"))));
+      }
+  
+      if (localStorage.getItem("groups") != null) {
+        promises.push(repository.writeGroups(JSON.parse(localStorage.getItem("groups"))));
+      }
+  
+      if (localStorage.getItem("custom-pairs") != null) {
+        promises.push(repository.writeSettings("custom-pairs", JSON.parse(localStorage.getItem("custom-pairs"))));
+      }
+  
+      if (localStorage.getItem("disabled-pairs") != null) {
+        promises.push(repository.writeSettings("disabled-pairs", JSON.parse(localStorage.getItem("disabled-pairs"))));
+      }
+  
+      if (localStorage.getItem("custom-setups") != null) {
+        promises.push(repository.writeSettings("custom-setups", JSON.parse(localStorage.getItem("custom-setups"))));
+      }
+  
+      if (localStorage.getItem("disabled-setups") != null) {
+        promises.push(repository.writeSettings("disabled-setups", JSON.parse(localStorage.getItem("disabled-setups"))));
+      }
+  
+      if (localStorage.getItem("darkmode") != null) {
+        promises.push(repository.writeSettings("darkmode", JSON.parse(localStorage.getItem("darkmode"))));
+      }
+  
+      if (localStorage.getItem("reviewmode") != null) {
+        promises.push(repository.writeSettings("reviewmode", JSON.parse(localStorage.getItem("reviewmode"))));
+      }
+  
+      if (localStorage.getItem("tags") != null) {
+        promises.push(repository.writeSettings("tags", JSON.parse(localStorage.getItem("tags"))));
+      }
+  
+      if (localStorage.getItem("version") != null) {
+        promises.push(repository.writeSettings("version", JSON.parse(localStorage.getItem("version"))));
+      }
+
+      Promise.all(promises).then(() => {
+        this.loadStoredData();
+        this.hideLoginModal();
+      });
+    },
+
+    hideLoginModal: function() {
+      $("#login-modal").removeClass("in");
+      $(".modal-backdrop").remove();
+      $('body').removeClass('modal-open');
+      $('body').css('padding-right', '');
+      $("#login-modal").hide();
+    },
+
     setupChart: function() {
       if (this.chart != null) {
         this.chart.destroy();
@@ -384,7 +538,7 @@ var vm = new Vue({
           },
           scales: {
             xAxes: [{
-              display: false
+              display: true,
             }],
             yAxes: [{
               gridLines: {
@@ -412,20 +566,20 @@ var vm = new Vue({
     loadStoredData: async function() {
       let data = await repository.read();
 
-      this.trades = data.trades;
-      this.groups = data.groups;
+      this.trades = data.trades || [];
+      this.groups = data.groups || [];
 
-      this.customPairs = data.customPairs;
-      this.pairs.push(...data.customPairs);
-      this.disabledPairs = data.disabledPairs;
+      this.customPairs = data.customPairs || [];
+      this.pairs.push(...this.customPairs);
+      this.disabledPairs = data.disabledPairs || [];
 
-      this.customSetups = data.customSetups;
-      this.setups.push(...data.customSetups);
-      this.disabledSetups = data.disabledSetups;
+      this.customSetups = data.customSetups || [];
+      this.setups.push(...this.customSetups);
+      this.disabledSetups = data.disabledSetups || [];
 
-      this.darkmode = data.darkmode;
-      this.reviewmode = data.reviewmode;
-      this.tags = data.tags;
+      this.darkmode = data.darkmode || false;
+      this.reviewmode = data.reviewmode || false;
+      this.tags = data.tags || [];
     },
 
     saveTrades: async function(data) {

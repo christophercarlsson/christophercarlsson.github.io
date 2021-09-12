@@ -1,36 +1,42 @@
+const baseUrl = "http://us-central1-fxpositiontracker.cloudfunctions.net";
 class Repository {
   source = "local";
+  userId = null;
 
   setSource = function(source) {
     this.source = source;
+  }
+
+  setUserId = function(userId) {
+    this.userId = userId;
   }
 
   read = function() {
     if (this.source == "local") {
       return readFromLocalStorage();
     }
-    return readFromRemoteStorage();
+    return readFromRemoteStorage(this.userId);
   };
 
   writeTrades = function(data) {
     if (this.source == "local") {
       return saveTradesToLocalStorage(data);
     }
-    return saveTradesToRemoteStorage(data);
+    return saveTradesToRemoteStorage(this.userId, data);
   };
 
   writeGroups = function(data) {
     if (this.source == "local") {
       return saveGroupsToLocalStorage(data);
     }
-    return saveGroupsToRemoteStorage(data);
+    return saveGroupsToRemoteStorage(this.userId, data);
   };
 
   writeSettings = function(setting, data) {
     if (this.source == "local") {
       return saveSettingToLocalStorage(setting, data);
     }
-    return saveSettingToRemoteStorage(setting, data);
+    return saveSettingToRemoteStorage(this.userId, setting, data);
   };
 }
 
@@ -102,14 +108,116 @@ function saveSettingToLocalStorage(setting, data) {
   });
 };
 
-function readFromRemoteStorage() {
+function readFromRemoteStorage(userId) {
+  if (userId == null) {
+    return;
+  }
+
   return new Promise((resolve, reject) => {
-    
+    axios({
+      method: 'get',
+      url: `${baseUrl}/read?userId=${userId}`
+    }).then((response) => {
+      if (response.status === 200) {
+        const { data } = response.data;
+        return resolve({
+          trades: data["trades"] || [],
+          groups: data["groups"] || [],
+          customPairs: data["settings"]["custom-pairs"] || [],
+          disabledPairs: data["settings"]["disabled-pairs"] || [],
+          customSetups: data["settings"]["custom-setups"] || [],
+          disabledSetups: data["settings"]["disabled-setups"] || [],
+          tags: data["settings"]["tags"] || [],
+          darkmode: data["settings"]["darkmode"] || false,
+          reviewmode: data["settings"]["reviewmode"] || false,
+          version: data["settings"]["version"] || 0,
+        });
+      }
+      
+      alert("Could not load trades. Please contact support.");
+      reject();
+    }).catch((error) => {
+      alert("Could not load trades. Please try reloading the page or contacting support. Error: " + error);
+      reject();
+    });
   });
 };
 
-function saveTradesToRemoteStorage() {
+function saveTradesToRemoteStorage(userId, data) {
+  if (userId == null) {
+    return;
+  }
+
   return new Promise((resolve, reject) => {
-    
+    axios({
+      method: 'post',
+      url: `${baseUrl}/storeTrades?userId=${userId}`,
+      data: {
+        trades: data
+      }
+    }).then((response) => {
+      if (response.status === 200 && response.data.error == false) {
+        resolve();
+      } else {
+        alert("Could not save trades. Please try again.");
+        reject();
+      }
+    }).catch((error) => {
+      alert("Could not save trades. Please try reloading the page or contacting support. Error: " + error);
+      reject();
+    });
+  });
+};
+
+function saveGroupsToRemoteStorage(userId, data) {
+  if (userId == null) {
+    return;
+  }
+
+  return new Promise((resolve, reject) => {
+    axios({
+      method: 'post',
+      url: `${baseUrl}/storeGroups?userId=${userId}`,
+      data: {
+        groups: data
+      }
+    }).then((response) => {
+      if (response.status === 200 && response.data.error == false) {
+        resolve();
+      } else {
+        alert("Could not save groups. Please try again.");
+        reject();
+      }
+    }).catch((error) => {
+      alert("Could not save groups. Please try reloading the page or contacting support. Error: " + error);
+      reject();
+    });
+  });
+};
+
+function saveSettingToRemoteStorage(userId, setting, data) {
+  if (userId == null) {
+    return;
+  }
+
+  return new Promise((resolve, reject) => {
+    axios({
+      method: 'post',
+      url: `${baseUrl}/storeSetting?userId=${userId}`,
+      data: {
+        setting: setting,
+        value: data
+      }
+    }).then((response) => {
+      if (response.status === 200 && response.data.error == false) {
+        resolve();
+      } else {
+        alert("Could not save settings. Please try again.");
+        reject();
+      }
+    }).catch((error) => {
+      alert("Could not save settings. Please try reloading the page or contacting support. Error: " + error);
+      reject();
+    });
   });
 };
