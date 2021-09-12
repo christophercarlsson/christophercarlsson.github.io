@@ -19,6 +19,27 @@ document.addEventListener('DOMContentLoaded', function() {
     app = firebase.initializeApp(firebaseConfig);
     googleProvider = new firebase.auth.GoogleAuthProvider();
     facebookProvider = new firebase.auth.FacebookAuthProvider();
+
+    if (localStorage.getItem('redirectInProgress') || false) {
+      Vue.set(vm, 'loggingIn', true);
+      firebase.auth()
+        .getRedirectResult()
+        .then((result) => {
+          localStorage.removeItem('redirectInProgress');
+
+          if (result.user != null) {
+            let user = result.user;
+            let uid = user.uid;
+            vm.remoteLoginDone(uid);
+          }
+        }).catch((error) => {
+          localStorage.setItem('redirectInProgress');
+          console.log(error);
+          alert("Something went wrong when logging in, please try again.");
+          localStorage.removeItem('method');
+          localStorage.removeItem('userId');
+        });
+    }
   } catch (e) {
     console.log(e);
   }
@@ -373,38 +394,14 @@ var vm = new Vue({
 
     loginWithGoogle: function() {
       Vue.set(vm, 'loggingIn', true);
-
-      app.auth()
-      .signInWithPopup(googleProvider)
-      .then((result) => {
-        let user = result.user;
-        let uid = user.uid;
-        this.remoteLoginDone(uid);
-
-      }).catch((error) => {
-        console.log(error);
-        alert("Something went wrong when logging in, please try again.");
-        llocalStorage.removeItem('method');
-        localStorage.removeItem('userId');
-      });
+      localStorage.setItem('redirectInProgress', true);
+      app.auth().signInWithRedirect(googleProvider);
     },
 
     loginWithFacebook: function() {
       Vue.set(vm, 'loggingIn', true);
-
-      app.auth()
-      .signInWithPopup(facebookProvider)
-      .then((result) => {
-        let user = result.user;
-        let uid = user.uid;
-        this.remoteLoginDone(uid);
-
-      }).catch((error) => {
-        console.log(error);
-        alert("Something went wrong when logging in, please try again.");
-        localStorage.removeItem('method');
-        localStorage.removeItem('userId');
-      });
+      localStorage.setItem('redirectInProgress', true);
+      app.auth().signInWithRedirect(facebookProvider);
     },
 
     domReady: function() {
