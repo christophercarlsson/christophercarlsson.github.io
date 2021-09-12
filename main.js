@@ -1,5 +1,6 @@
-let version = 4;
-let vueselect = Vue.component('vue-multiselect', window.VueMultiselect.default)
+let version = 5;
+let vueselect = Vue.component('vue-multiselect', window.VueMultiselect.default);
+let repository = new Repository();
 
 var vm = new Vue({
   el: ".container-fluid",
@@ -116,14 +117,13 @@ var vm = new Vue({
 
   watch: {
     darkmode: function (val) {
-      localStorage.setItem('darkmode', val ? 1 : 0);
-      Vue.nextTick(function () {
+      vm.saveSetting('darkmode', val ? 1 : 0).then(() => {
         vm.setDarkmodeOnBody();
       });
     },
 
     reviewmode: function (val) {
-      localStorage.setItem('reviewmode', val ? 1 : 0);
+      vm.saveSetting('reviewmode', val ? 1 : 0);
     },
 
     list: function() {
@@ -133,7 +133,7 @@ var vm = new Vue({
 
   created: function () {
     this.migrate();
-    this.loadLocalStorageData();
+    this.loadStoredData();
 
     document.onkeypress = function (e) {
         e = e || window.event;
@@ -409,44 +409,41 @@ var vm = new Vue({
       });
     },
 
-    loadLocalStorageData: function() {
-      if (localStorage.getItem("trades") != null) {
-        this.trades = JSON.parse(localStorage.getItem("trades"));
-      }
-  
-      if (localStorage.getItem("groups") != null) {
-        this.groups = JSON.parse(localStorage.getItem("groups"));
-      }
-  
-      if (localStorage.getItem("custom-pairs") != null) {
-        this.customPairs = JSON.parse(localStorage.getItem("custom-pairs"));
-        this.pairs.push(...this.customPairs);
-      }
-  
-      if (localStorage.getItem("disabled-pairs") != null) {
-        this.disabledPairs = JSON.parse(localStorage.getItem("disabled-pairs"));
-      }
-  
-      if (localStorage.getItem("custom-setups") != null) {
-        this.customSetups = JSON.parse(localStorage.getItem("custom-setups"));
-        this.setups.push(...this.customSetups);
-      }
-  
-      if (localStorage.getItem("disabled-setups") != null) {
-        this.disabledSetups = JSON.parse(localStorage.getItem("disabled-setups"));
-      }
-  
-      if (localStorage.getItem("darkmode") != null) {
-        this.darkmode = localStorage.getItem("darkmode") == 1;
-      }
-  
-      if (localStorage.getItem("reviewmode") != null) {
-        this.reviewmode = localStorage.getItem("reviewmode") == 1;
-      }
-  
-      if (localStorage.getItem("tags") != null) {
-        this.tags = JSON.parse(localStorage.getItem("tags"));
-      }
+    loadStoredData: async function() {
+      let data = await repository.read();
+
+      this.trades = data.trades;
+      this.groups = data.groups;
+
+      this.customPairs = data.customPairs;
+      this.pairs.push(...data.customPairs);
+      this.disabledPairs = data.disabledPairs;
+
+      this.customSetups = data.customSetups;
+      this.setups.push(...data.customSetups);
+      this.disabledSetups = data.disabledSetups;
+
+      this.darkmode = data.darkmode;
+      this.reviewmode = data.reviewmode;
+      this.tags = data.tags;
+    },
+
+    saveTrades: async function(data) {
+      return new Promise((resolve, reject) => {
+        repository.writeTrades(data).then(resolve());
+      });
+    },
+
+    saveGroups: async function(data) {
+      return new Promise((resolve, reject) => {
+        repository.writeGroups(data).then(resolve());
+      });
+    },
+
+    saveSetting: async function(setting, data) {
+      return new Promise((resolve, reject) => {
+        repository.writeSettings(setting, data).then(resolve());
+      });
     },
 
     setupEditModal: function() {
@@ -458,8 +455,10 @@ var vm = new Vue({
         });
         vm.currentEditTrade.r = vm.rResult(vm.currentEditTrade.result);
         vm.currentEditTrade.pips = vm.pipResult(vm.currentEditTrade.result);
-        localStorage.setItem("trades", JSON.stringify(vm.trades));
-        vm.setupChart();
+
+        vm.saveTrades(vm.trades).then(() => {
+          vm.setupChart();
+        });
       });
     },
 
@@ -473,12 +472,14 @@ var vm = new Vue({
           let result = reader.result;
           let json = JSON.parse(result);
 
+          let promises = [];
+
           if (json.hasOwnProperty('customPairs') && json.hasOwnProperty('disabledPairs') &&
               json.hasOwnProperty('customSetups') && json.hasOwnProperty('disabledSetups')) {
-            localStorage.setItem('custom-pairs', JSON.stringify(json.customPairs));
-            localStorage.setItem('disabled-pairs', JSON.stringify(json.disabledPairs));
-            localStorage.setItem('custom-setups', JSON.stringify(json.customSetups));
-            localStorage.setItem('disabled-setups', JSON.stringify(json.disabledSetups));
+            promises.push(vm.saveSetting('custom-pairs', json.customPairs));
+            promises.push(vm.saveSetting('disabled-pairs', json.disabledPairs));
+            promises.push(vm.saveSetting('custom-setups', json.customSetups));
+            promises.push(vm.saveSetting('disabled-setups', json.disabledSetups));
 
             Vue.set(vm, 'customPairs', json.customPairs);
             Vue.set(vm, 'disabledPairs', json.disabledPairs);
@@ -487,23 +488,25 @@ var vm = new Vue({
           }
 
           if (json.hasOwnProperty('tags')) {
-            localStorage.setItem('tags', JSON.stringify(json.tags));
+            promises.push(vm.saveSetting('tags', json.tags));
           }
 
           if (json.hasOwnProperty('version')) {
-            localStorage.setItem("version", json.version);
+            promises.push(vm.saveSetting("version", json.version));
           }
 
           if (json.hasOwnProperty('trades') && json.hasOwnProperty('groups')) {
-            localStorage.setItem('trades', JSON.stringify(json.trades));
-            localStorage.setItem('groups', JSON.stringify(json.groups));
+            promises.push(vm.saveTrades(json.trades));
+            promises.push(vm.saveGroups(json.groups));
 
             Vue.set(vm, 'trades', json.trades);
             Vue.set(vm, 'groups', json.groups);
           }
 
-          alert('Successfully imported your data.');
-          location.reload();
+          Promise.all(promises).then(() => {
+            alert('Successfully imported your data.');
+            location.reload();
+          });
         }
         reader.readAsText(this.files[0]); 
       });
@@ -550,7 +553,7 @@ var vm = new Vue({
     exitReview: function() {
       Vue.set(vm, 'isReviewing', false);
       Vue.set(vm, 'group', null);
-      vm.loadLocalStorageData();
+      vm.loadStoredData();
     },
 
     addTrade: function() {
@@ -669,7 +672,7 @@ var vm = new Vue({
       this.after = null;
       this.tradeTags = [];
       
-      localStorage.setItem("trades", JSON.stringify(this.trades));
+      this.saveTrades(this.trades);
     },
 
     addGroup: function() {
@@ -690,7 +693,7 @@ var vm = new Vue({
       this.groups.push(this.groupName);
       this.group = this.groupName;
       this.groupName = null;
-      localStorage.setItem("groups", JSON.stringify(this.groups));
+      this.saveGroups(this.groups);
     },
 
     deleteTrade: function(tradeId) {
@@ -700,7 +703,7 @@ var vm = new Vue({
 
       if (confirm('Do you really want to remove this trade?')) {
         this.trades = this.trades.filter((trade) => tradeId != trade.id);
-        localStorage.setItem("trades", JSON.stringify(this.trades));
+        vm.saveTrades(this.trades);
       }
     },
 
@@ -711,7 +714,7 @@ var vm = new Vue({
 
       if (confirm('Do you really want to remove this session?')) {
         this.groups = this.groups.filter((group) => groupName != group);
-        localStorage.setItem("groups", JSON.stringify(this.groups));
+        this.saveGroups(this.groups);
         this.group = null;
       }
     },
@@ -748,7 +751,7 @@ var vm = new Vue({
         this.disabledPairs.push(pair);
       }
 
-      localStorage.setItem("disabled-pairs", JSON.stringify(this.disabledPairs));
+      this.saveSetting('disabled-pairs', this.disabledPairs);
     },
 
     toggleSetup: function(setup) {
@@ -763,7 +766,7 @@ var vm = new Vue({
         this.disabledSetups.push(setup);
       }
 
-      localStorage.setItem("disabled-setups", JSON.stringify(this.disabledSetups));
+      this.saveSetting("disabled-setups", this.disabledSetups);
     },
 
     addPair: function() {
@@ -778,7 +781,7 @@ var vm = new Vue({
       this.customPairs.push(this.newPair);
       this.pairs.push(this.newPair);
       this.newPair = null;
-      localStorage.setItem("custom-pairs", JSON.stringify(this.customPairs));
+      this.saveSetting("custom-pairs", this.customPairs);
     },
 
     removePair: function(pair) {
@@ -796,7 +799,7 @@ var vm = new Vue({
         this.pairs.splice(index, 1);
       }
 
-      localStorage.setItem("custom-pairs", JSON.stringify(this.customPairs));
+      this.saveSetting("custom-pairs", this.customPairs);
     },
 
     addSetup: function() {
@@ -811,7 +814,7 @@ var vm = new Vue({
       this.customSetups.push(this.newSetup);
       this.setups.push(this.newSetup);
       this.newSetup = null;
-      localStorage.setItem("custom-setups", JSON.stringify(this.customSetups));
+      this.saveSetting("custom-setups", this.customSetups);
     },
 
     removeSetup: function(setup) {
@@ -829,7 +832,7 @@ var vm = new Vue({
         this.setups.splice(index, 1);
       }
 
-      localStorage.setItem("custom-setups", JSON.stringify(this.customSetups));
+      this.saveSetting("custom-setups", this.customSetups);
     },
 
     statistics: function(array, property, noZeros) {
@@ -876,20 +879,20 @@ var vm = new Vue({
       return result;
     },
 
-    migrate: function() {
-      if (localStorage.getItem("version") == null) {
-        localStorage.setItem("version", version);
+    migrate: async function() {
+      let data = await repository.read();
+      let storedVersion = data.version || version;
+      if (data.version == null) {
+        this.saveSetting("version", version);
       }
 
-      let oldVersion = localStorage.getItem("version");
-      if (oldVersion == version) {
+      if (storedVersion == version) {
         return;
       }
 
       // Execute migrations here
       this.multipleTakeProfitMigration();
-
-      localStorage.setItem("version", version);
+      this.saveSetting("version", version);
     },
 
     setDarkmodeOnBody: function() {
@@ -942,24 +945,27 @@ var vm = new Vue({
     },
 
     multipleTakeProfitMigration: function() {
-      let trades = JSON.parse(localStorage.getItem("trades"));
-      if (trades.length > 0 && Array.isArray(trades[0].result)) {
-        return;
-      }
+      repository.read((data) => {
+        let trades = data.trades;
 
-      trades = trades.map((trade) => {
-        const tempTakeProfit = trade.result;
-        trade.result = [{
-          closed: 100,
-          pips: tempTakeProfit,
-          r: _.round(tempTakeProfit / trade.stop, 2)
-        }];
-        trade.r = this.rResult(trade.result);
-        trade.pips = this.pipResult(trade.result);
-        
-        return trade;
+        if (trades.length > 0 && Array.isArray(trades[0].result)) {
+          return;
+        }
+  
+        trades = trades.map((trade) => {
+          const tempTakeProfit = trade.result;
+          trade.result = [{
+            closed: 100,
+            pips: tempTakeProfit,
+            r: _.round(tempTakeProfit / trade.stop, 2)
+          }];
+          trade.r = this.rResult(trade.result);
+          trade.pips = this.pipResult(trade.result);
+          
+          return trade;
+        });
+        this.saveTrades(trades);
       });
-      localStorage.setItem('trades', JSON.stringify(trades));
     },
 
     addTag: function(newTag) {
@@ -971,9 +977,9 @@ var vm = new Vue({
         name: newTag,
         code: newTag.substring(0, 2) + Math.floor((Math.random() * 10000000))
       }
-      this.tradeTags.push(tag)
-      this.tags.push(tag)
-      localStorage.setItem('tags', JSON.stringify(this.tags));
+      this.tradeTags.push(tag);
+      this.tags.push(tag);
+      this.saveSetting("tags", this.tags);
     },
   }
 });

@@ -517,6 +517,7 @@
 				<div class="col-xl-12">
 					<table class="table table-striped">
 						<thead>
+							<th>#</th>
 							<th>Date</th>
 							<th>Pair</th>
 							<th>Direction</th>
@@ -534,6 +535,7 @@
 						</thead>
 						<tbody>
 							<tr v-for="(trade, index) in list" :key="trade.id">
+								<td width="2%">{{ list.length - index }}</td>
 								<td width="11%">{{ trade.date }}</td>
 								<td width="8%">{{ trade.pair }}</td>
 								<td width="6%">{{ trade.direction }}</td>
@@ -849,6 +851,7 @@
 	<script src="js/moment.2.29.1.js"></script>
 	<script src="js/lodash-4.17.15.min.js"></script>
 	<script src="js/vue-multiselect.2.1.0.min.js"></script>
+	<script src="repository.js"></script>
 	<script src="main.js"></script>
 </body>
 
