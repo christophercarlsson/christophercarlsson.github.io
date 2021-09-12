@@ -19,17 +19,26 @@ document.addEventListener('DOMContentLoaded', function() {
     app = firebase.initializeApp(firebaseConfig);
     googleProvider = new firebase.auth.GoogleAuthProvider();
     facebookProvider = new firebase.auth.FacebookAuthProvider();
-    
+
     if (localStorage.getItem('redirectInProgress') || false) {
       Vue.set(vm, 'loggingIn', true);
+      firebase.auth()
+        .getRedirectResult()
+        .then((result) => {
+          localStorage.removeItem('redirectInProgress');
 
-      firebase.auth().onAuthStateChanged((user) => {
-        localStorage.removeItem('redirectInProgress');
-        if (user) {
-          let uid = user.uid;
-          vm.remoteLoginDone(uid);
-        }
-      });
+          if (result.user != null) {
+            let user = result.user;
+            let uid = user.uid;
+            vm.remoteLoginDone(uid);
+          }
+        }).catch((error) => {
+          localStorage.setItem('redirectInProgress');
+          console.log(error);
+          alert("Something went wrong when logging in, please try again.");
+          localStorage.removeItem('method');
+          localStorage.removeItem('userId');
+        });
     }
   } catch (e) {
     console.log(e);
