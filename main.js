@@ -871,9 +871,6 @@ var vm = new Vue({
         return;
       }
 
-        return;
-      }
-
       if (this.groups.map((group) => group.name.toLowerCase()).includes(this.groupName.toLowerCase())) {
         alert("Name must be unique.");
         return;
