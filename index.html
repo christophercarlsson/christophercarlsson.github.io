@@ -22,18 +22,32 @@
 						<label>Trade session</label>
 						<select v-model="group" class="form-control">
 							<option value="null" disabled>Choose...</option>
-							<option v-for="group in groups">{{ group }}</option>
+							<option v-for="group in groups" :key="group.name" :value="group">{{ group.name }}</option>
 						</select>
 					</div>
-
 					<div class="col-xl-3">
-						<label>New trading session</label>
-						<input v-model="groupName" class="form-control" placeholder="E.g. Backtesting 2020/11/28" />
+						<div class="form-group">
+							<label>New trading session</label>
+							<input v-model="groupName" class="form-control" placeholder="E.g. Backtesting 2020/11/28" />
+						</div>
+						<div v-if="groupName != null && groupName.length > 0" class="form-group">
+							<label>Session type</label>
+							<select v-model="groupType" class="form-control">
+								<option value="null" disabled>Select...</option>
+								<option value="study">Study</option>
+							</select>
+							<small v-if="groupType == 'journal'" class="form-text text-muted">Counts in dollars, tracks actual P&L.</small>
+							<small v-if="groupType == 'study'" class="form-text text-muted">Counts in Rs, has case study data collection parameters.</small>
+						</div>
+						<div v-if="groupName != null && groupName.length > 0 && groupType == 'journal'" class="form-group">
+							<label>Starting account balance</label>
+							<input v-model="accountBalance" class="form-control" type="number" placeholder="Starting balance.." />
+						</div>
 					</div>
 
 					<div class="col-xl-6" style="margin-top: 32px;">
 						<button v-bind:disabled="isReviewing" v-on:click="addGroup" type="button" class="btn btn-outline-success">Add trade session</button>
-						<button v-bind:disabled="isReviewing" v-if="group != null" v-on:click="deleteGroup(group)" type="button" class="btn btn-outline-danger">Remove current session</button>
+						<button v-bind:disabled="isReviewing" v-if="group != null" v-on:click="deleteGroup(group.name)" type="button" class="btn btn-outline-danger">Remove current session</button>
 					</div>
 				</div>
 			</div>
@@ -50,7 +64,7 @@
 			<div class="col-xl-12">
 				<div class="row mb-3">
 					<div class="col-xl-12">
-						<h4 class="d-inline-block">Statistics for session</h4>
+						<h4 class="d-inline-block">Statistics for {{ group ? group.type : 'session' }}</h4>
 						<button v-on:click="showStats = !showStats" type="button" class="btn btn-sm btn-outline-primary d-inline-block ml-3">
 							<span v-if="!showStats">+</span>
 							<span v-if="showStats">-</span>
@@ -295,10 +309,16 @@
 										</select>
 									</div>
 								</div>
-								<div class="col-xl-4">
+								<div v-if="skipEntryInput" class="col-xl-4">
 									<div class="form-group">
 										<label>Entry</label>
 										<input type="number" v-model="entry" class="form-control" placeholder="1.000" />
+									</div>
+								</div>
+								<div v-else class="col-xl-4">
+									<div class="form-group">
+										<label>Target</label>
+										<input type="number" v-model="profit" class="form-control" placeholder="Pips.." />
 									</div>
 								</div>
 							</div>
@@ -351,7 +371,7 @@
 								</div>
 							</div>
 							<div class="row">
-								<div class="col-xl-12">
+								<div v-if="skipEntryInput" class="col-xl-12">
 									<div class="form-group">
 										<label>Target</label>
 										<input type="number" v-model="profit" class="form-control" placeholder="Pips.." />
@@ -381,10 +401,11 @@
 						</div>
 					</div>
 				</div>
+				
 				<div class="col-xl-4">
 					<div class="row">
 						<div class="col-xl-5">
-							<div class="row">
+							<div v-if="skipBeforeScreenshotInput" class="row">
 								<div class="col-xl-12">
 									<div class="form-group">
 										<label>Before</label>
@@ -523,13 +544,16 @@
 							<th>Direction</th>
 							<th>Type</th>
 							<th>Setup</th>
-							<th>Entry price</th>
+							<th v-if="skipEntryInput">Entry price</th>
 							<th>Stop loss</th>
 							<th>Target</th>
 							<th>Result</th>
 							<th>Notes</th>
-							<th>Before</th>
-							<th>After</th>
+							<th v-if="skipBeforeScreenshotInput">Before</th>
+							<th>
+								<template v-if="!skipBeforeScreenshotInput">Screenshot</template>
+								<template v-else>After</template>
+							</th>
 							<th>Tags</th>
 							<th class="text-center">Edit</th>
 						</thead>
@@ -541,7 +565,7 @@
 								<td width="6%">{{ trade.direction }}</td>
 								<td width="9%">{{ trade.type }}</td>
 								<td width="8%">{{ trade.setup }}</td>
-								<td width="6%">{{ trade.entry }}</td>
+								<td v-if="skipEntryInput" width="6%">{{ trade.entry }}</td>
 								<td width="6%">{{ trade.stop }} pips</td>
 								<td width="6%">{{ trade.profit }} pips</td>
 								<td width="8%">
@@ -568,11 +592,14 @@
 								<td width="6%" class="notes-container">
 									<button v-if="trade.notes" v-on:click="showNotes(trade.notes)" type="button" class="btn btn-sm btn-link m-0 p-0">Notes</button>
 								</td>
-								<td width="6%">
+								<td v-if="skipBeforeScreenshotInput" width="6%">
 									<a v-if="trade.before" v-bind:href="trade.before" target="_blank">Before</a>
 								</td>
 								<td width="6%">
-									<a v-if="trade.after" v-bind:href="trade.after" target="_blank">After</a>
+									<a v-if="trade.after" v-bind:href="trade.after" target="_blank">
+										<template v-if="skipBeforeScreenshotInput">Screenshot</template>
+										<template v-else>After</template>
+									</a>
 								</td>
 								<td width="4%">
 									<span 
@@ -630,6 +657,16 @@
 							<div class="col-xl-2 text-right"><input v-model="darkmode" type="checkbox" class="form-check-input" /></div>
 						</div>
 
+						<div class="row mt-3">
+							<div class="col-xl-10"><h6>Skip entry price specification (studies only)</h6></div>
+							<div class="col-xl-2 text-right"><input v-model="skipEntry" type="checkbox" class="form-check-input" /></div>
+						</div>
+
+						<div class="row mt-3">
+							<div class="col-xl-10"><h6>Skip "before" screenshot for studies</h6></div>
+							<div class="col-xl-2 text-right"><input v-model="skipBeforeScreenshot" type="checkbox" class="form-check-input" /></div>
+						</div>
+						
 						<div class="row mt-3">
 							<div class="col-xl-10"><h6>Enable review mode</h6></div>
 							<div class="col-xl-2 text-right"><input v-model="reviewmode" type="checkbox" class="form-check-input" /></div>
@@ -772,7 +809,7 @@
 
 						<div class="row mb-2">
 							<div class="col-xl-6">
-								<div class="row">
+								<div v-if="skipBeforeScreenshotInput" class="row">
 									<div class="col-xl-12">
 										<div class="form-group">
 											<label>Screenshot before</label>

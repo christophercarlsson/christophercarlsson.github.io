@@ -71,6 +71,14 @@ function readFromLocalStorage() {
       data.darkmode = localStorage.getItem("darkmode") == 1;
     }
 
+    if (localStorage.getItem("skipEntry") != null) {
+      data.skipEntry = localStorage.getItem("skipEntry") == 1;
+    }
+
+    if (localStorage.getItem("skipBeforeScreenshot") != null) {
+      data.skipBeforeScreenshot = localStorage.getItem("skipBeforeScreenshot") == 1;
+    }
+
     if (localStorage.getItem("reviewmode") != null) {
       data.reviewmode = localStorage.getItem("reviewmode") == 1;
     }

@@ -1,4 +1,4 @@
-let version = 5;
+let version = 6;
 let vueselect = Vue.component('vue-multiselect', window.VueMultiselect.default);
 let repository = new Repository();
 let app;
@@ -51,6 +51,7 @@ var vm = new Vue({
 
   data: {
     group: null,
+    groupType: null,
     groupName: null,
     groups: [],
     trades: [],
@@ -97,6 +98,8 @@ var vm = new Vue({
     before: null,
     after: null,
     tradeTags: [],
+
+    groupTypes: ["study", "journal"],
 
     pairs: [
       "AUDCAD",
@@ -155,6 +158,8 @@ var vm = new Vue({
     disabledSetups: [],
 
     darkmode: false,
+    skipEntry: false,
+    skipBeforeScreenshot: false,
     reviewmode: false,
     isReviewing: false,
     loggingIn: false,
@@ -167,6 +172,14 @@ var vm = new Vue({
       });
     },
 
+    skipEntry: function (val) {
+      vm.saveSetting('skipEntry', val ? 1 : 0);
+    },
+
+    skipBeforeScreenshot: function (val) {
+      vm.saveSetting('skipBeforeScreenshot', val ? 1 : 0);
+    },
+
     reviewmode: function (val) {
       vm.saveSetting('reviewmode', val ? 1 : 0);
     },
@@ -176,7 +189,7 @@ var vm = new Vue({
     }
   },
 
-  created: function () {
+  created: async function () {
     this.domReady();
 
     if (localStorage.getItem('method') == null) {
@@ -190,7 +203,7 @@ var vm = new Vue({
 
     repository.setSource(localStorage.getItem('method'));
     repository.setUserId(localStorage.getItem('userId'));
-    this.migrate();
+    await this.migrate();
     this.loadStoredData();
   },
 
@@ -204,7 +217,7 @@ var vm = new Vue({
         return [];
       }
       return this.trades.filter((trade) => {
-        if (trade.group != this.group) {
+        if (trade.group != this.group.name) {
           return false;
         }
 
@@ -265,6 +278,14 @@ var vm = new Vue({
         if (a.date > b.date) return -1;
         return 0;
       });
+    },
+
+    skipEntryInput: function() {
+      return (this.group.type == "journal" || (this.group.type == "study" && !this.skipEntry))
+    },
+
+    skipBeforeScreenshotInput: function() {
+      return (this.group.type == "journal" || (this.group.type == "study" && !this.skipBeforeScreenshot))
     },
 
     bestPairs: function() {
@@ -381,7 +402,7 @@ var vm = new Vue({
 
     enabledSetups: function() {
       return this.setups.filter((setup) => !this.disabledSetups.includes(setup));
-    }
+    },
   },
 
   methods: {
@@ -582,6 +603,8 @@ var vm = new Vue({
       this.disabledSetups = data.disabledSetups || [];
 
       this.darkmode = data.darkmode || false;
+      this.skipEntry = data.skipEntry || false;
+      this.skipBeforeScreenshot = data.skipBeforeScreenshot || false;
       this.reviewmode = data.reviewmode || false;
       this.tags = data.tags || [];
     },
@@ -720,7 +743,7 @@ var vm = new Vue({
       }
 
       if (_.isEmpty(this.date)) {
-        alert("Must enter a date");
+        alert("Must enter a date and time");
         return;
       }
 
@@ -744,7 +767,7 @@ var vm = new Vue({
         return;
       }
 
-      if (_.isEmpty(this.entry) || !$.isNumeric(this.entry)) {
+      if ((this.group.type == "journal" || (this.group.type == "study" && !this.skipEntry)) && (_.isEmpty(this.entry) || !$.isNumeric(this.entry))) {
         alert("Must enter a valid entry price");
         return;
       }
@@ -799,7 +822,7 @@ var vm = new Vue({
 
       this.trades.push({
         id: this.id(),
-        group: this.group,
+        group: this.group.name,
         date: this.date,
         pair: this.pair,
         direction: this.direction,
@@ -839,18 +862,34 @@ var vm = new Vue({
       }
 
       if (_.isEmpty(this.groupName)) {
-        alert("Must enter a group name.");
+        alert("Must enter a session name.");
         return;
       }
 
-      if (this.groups.includes(this.groupName)) {
+      if (this.groupType == null) {
+        alert("Must enter a session type.");
+        return;
+      }
+
+        return;
+      }
+
+      if (this.groups.map((group) => group.name.toLowerCase()).includes(this.groupName.toLowerCase())) {
         alert("Name must be unique.");
         return;
       }
 
-      this.groups.push(this.groupName);
-      this.group = this.groupName;
+
+      const createdGroup = {
+        name: this.groupName,
+        type: this.groupType,
+      };
+
+      this.groups.push(createdGroup);
+      this.group = createdGroup;
       this.groupName = null;
+      this.groupType = null;
+
       this.saveGroups(this.groups);
     },
 
@@ -871,7 +910,7 @@ var vm = new Vue({
       }
 
       if (confirm('Do you really want to remove this session?')) {
-        this.groups = this.groups.filter((group) => groupName != group);
+        this.groups = this.groups.filter((group) => groupName != group.name);
         this.saveGroups(this.groups);
         this.group = null;
       }
@@ -1050,6 +1089,8 @@ var vm = new Vue({
 
       // Execute migrations here
       this.multipleTakeProfitMigration();
+      await this.sessionTypeMigration();
+
       this.saveSetting("version", version);
     },
 
@@ -1124,6 +1165,22 @@ var vm = new Vue({
         });
         this.saveTrades(trades);
       });
+    },
+
+    sessionTypeMigration: async function() {
+      let data = await repository.read();
+      let groups = data.groups;
+
+      if (groups.length == 0) {
+        return;
+      }
+
+      this.saveGroups(groups.map((group) => {
+        return {
+          name: group,
+          type: "study"
+        };
+      }));
     },
 
     addTag: function(newTag) {
