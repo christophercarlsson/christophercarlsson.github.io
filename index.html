@@ -688,6 +688,21 @@
 							</div>
 						</div>
 
+						<div v-if="tags.length > 0" class="row mt-5">
+							<div class="col-xl-3">
+								<h6 class="mb-0">Tags</h6>
+								<span class="text-muted" style="font-size: 10px;">(Click to remove tag)</span>
+							</div>
+						</div>
+						<div v-if="tags.length > 0" class="row mt-3">
+							<div class="col-xl-12">
+								<span v-for="tag in tags" :key="tag.code" v-on:click="removeTag(tag)" class="badge mr-2 mb-2 badge-primary" style="cursor: pointer;">
+									{{ tag.name }}
+									<i class="fas fa-times ml-2" style="color: black;"></i>
+								</span>
+							</div>
+						</div>
+
 						<div class="row mt-5">
 							<div class="col-xl-3">
 								<h6 class="mb-0">Pairs</h6>
@@ -706,7 +721,7 @@
 									  class="badge mr-2 mb-2">{{ pair }}
 									
 									  <i v-if="customPairs.includes(pair)" v-on:click="removePair(pair)" class="fas fa-times ml-2" style="color: black; cursor: pointer;"></i>
-									</span>
+								</span>
 							</div>
 						</div>
 

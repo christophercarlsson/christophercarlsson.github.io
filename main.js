@@ -1193,5 +1193,29 @@ var vm = new Vue({
       this.tags.push(tag);
       this.saveSetting("tags", this.tags);
     },
+
+    removeTag: function(tag) {
+      if (vm.isReviewing) {
+        return;
+      }
+
+      if (this.tags.length == 0) {
+        return;
+      }
+
+      if (!confirm('Do you really want to remove this trade?')) {
+        return;
+      }
+      
+      this.trades = this.trades.map((trade) => {
+        trade.tags = (trade.tags ?? []).filter((t) => tag.code != t.code);
+        return trade;
+      });
+
+      this.tags = this.tags.filter((t) => tag.code != t.code);
+
+      this.saveTrades(this.trades);
+      this.saveSetting("tags", this.tags);
+    }
   }
 });
