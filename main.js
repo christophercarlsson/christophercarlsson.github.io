@@ -1,4 +1,4 @@
-let version = 6;
+let version = 7;
 let vueselect = Vue.component('vue-multiselect', window.VueMultiselect.default);
 let repository = new Repository();
 let app;
@@ -1075,7 +1075,7 @@ var vm = new Vue({
 
     migrate: async function() {
       let data = await repository.read();
-      let storedVersion = data.version || version;
+      let storedVersion = data.version || version - 1;
       if (data.version == null) {
         this.saveSetting("version", version);
       }
@@ -1172,12 +1172,18 @@ var vm = new Vue({
         return;
       }
 
+      if (typeof groups[0] === 'object') {
+        return;
+      }
+
       this.saveGroups(groups.map((group) => {
         return {
           name: group,
           type: "study"
         };
       }));
+
+      this.groups = groups;
     },
 
     addTag: function(newTag) {
